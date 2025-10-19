@@ -86,4 +86,4 @@ What to update in this README
 - Replace the one-line description and project status
 - Add exact prerequisites and commands
 - Add environment variables / API keys required
-- Add maintainers and contact info
+- Add maintainers and contact info or whatever
