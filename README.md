@@ -1,89 +1,55 @@
-# GPT
+# Concept Pulse
 
-Short description
-- Replace this one-liner with a concise description of what this repository provides.
+Concept Pulse is a desktop spaced-repetition program focused on long term retention of certification and domain-specific concepts. Create flash cards, tag them by difficulty, and track recall performance over weeks and months using a simple adaptive review queue.
 
-Status
-- TODO: update this with project status (alpha / beta / production), supported languages, and a short roadmap.
+## Status
 
-Quick links
-- Getting started: docs/GETTING_STARTED.md
-- Contributing: CONTRIBUTING.md
-- Issues: https://github.com/jwheintz/GPT/issues
+Early preview – the core features for adding cards, reviewing material, and tracking success rates are implemented.
 
-Quickstart (generic)
-1. Prerequisites
-   - Git >= 2.20
-   - Node.js (if applicable): node >= 16 and npm or yarn
-   - Python (if applicable): python >= 3.8 and pip
-   - Go (if applicable): go >= 1.18
-   - Docker (optional): docker >= 20.x
+## Features
 
-2. Clone the repo
+* Guided review flow with "Again", "Hard", "Good", and "Easy" ratings inspired by SM-2.
+* Difficulty and recall tagging with automatic success-rate tracking for each card.
+* Domain filtering to focus on the topics that matter for your current certification path.
+* SQLite-backed storage saved in `data/cards.db` for durability.
+
+## Quick start (step-by-step)
+
+1. **Install Python 3.9 or newer.**
+   * Windows & macOS: download the official installer from https://www.python.org/downloads/ and keep the "Install launcher" / "Add Python to PATH" boxes checked.
+   * Linux: install via your package manager (e.g. `sudo apt install python3 python3-venv python3-pip`).
+2. **Make sure Tkinter is available.** It is bundled with the standard installer on Windows and macOS. On Debian/Ubuntu-based Linux you may need `sudo apt install python3-tk`.
+3. **Get the project files.** Either clone with Git (`git clone https://github.com/jwheintz/GPT.git`) or download the ZIP from GitHub and unzip it.
+4. **Open a terminal inside the project folder.** (On Windows: `Shift + Right Click` → *Open PowerShell window here*; macOS/Linux: `cd` into the folder.)
+5. **Create a virtual environment (recommended):**
+
+   ```bash
+   python -m venv .venv
+   ```
+
+6. **Activate the virtual environment:**
+   * Windows PowerShell: `.venv\Scripts\Activate.ps1`
+   * Windows Command Prompt: `.venv\Scripts\activate.bat`
+   * macOS/Linux: `source .venv/bin/activate`
+7. **Start the app:**
+
+   ```bash
+   python -m app.main
+   ```
+
+   Keep the terminal window open while you use the GUI. If a firewall prompt appears the first time you run Python, allow it to communicate on private networks so the GUI can open.
+8. **(Optional) Create a desktop shortcut:** on Windows you can make a shortcut pointing to `pythonw.exe -m app.main` with the *Start in* field set to the project folder so the console window stays hidden.
+
+The first launch creates a `data/cards.db` file. Add new cards from the **Manage cards** tab, then work through the due queue under **Review queue**. Your review history is saved automatically when you close the app.
+
+## Development notes
+
+Static compilation checks:
+
 ```bash
-git clone https://github.com/jwheintz/GPT.git
-cd GPT
+python -m compileall app
 ```
 
-3. Identify language / build system
-- package.json → Node.js / TypeScript
-- pyproject.toml, requirements.txt or setup.py → Python
-- go.mod → Go
-- Cargo.toml → Rust
-- Dockerfile → containerized app
+## Getting help
 
-4. Common install / run commands (pick the block matching this repo)
-- Node.js
-```bash
-npm ci
-npm run build    # if present
-npm start        # or `npm run dev`
-npm test
-```
-- Python (venv)
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python -m pytest
-```
-- Go
-```bash
-go mod download
-go build ./...
-go test ./...
-```
-- Docker
-```bash
-docker build -t gpt-app .
-docker run -p 8080:8080 --env-file .env gpt-app
-```
-
-5. Run tests
-- Look for tests/ or __tests__/ or a Makefile target `test` and run accordingly:
-```bash
-npm test
-pytest
-go test ./...
-make test
-```
-
-6. Example usage
-- Replace the example below with repo-specific instructions:
-```bash
-# Start the app, then check health
-npm start
-curl http://localhost:8080/health
-```
-
-7. Need help?
-- Open an issue at https://github.com/jwheintz/GPT/issues and include:
-  - OS/version
-  - Steps to reproduce
-  - Logs or error output
-
-What to update in this README
-- Replace the one-line description and project status
-- Add exact prerequisites and commands
-- Add environment variables / API keys required
-- Add maintainers and contact info or whatever
+Please open an issue at https://github.com/jwheintz/GPT/issues with details about your environment and the steps that led to the problem.
