@@ -1,89 +1,53 @@
-# GPT
+# LearnHero Loop
 
-Short description
-- Replace this one-liner with a concise description of what this repository provides.
+LearnHero Loop is a lightweight study companion that blends spaced repetition with a Pomodoro workflow. Teachers and students can capture new "anchors" during focus blocks, automatically schedule follow-up recalls, and work through interleaved review cards in the same dashboard.
 
-Status
-- TODO: update this with project status (alpha / beta / production), supported languages, and a short roadmap.
+## Status
+- **Stage:** Prototype (work-in-progress)
+- **Stack:** Vite, React, TypeScript, Tailwind CSS
+- **Roadmap:** polish responsive layout, add quiz accuracy tracking, and enable cloud sync/export options
 
-Quick links
-- Getting started: docs/GETTING_STARTED.md
-- Contributing: CONTRIBUTING.md
-- Issues: https://github.com/jwheintz/GPT/issues
+## Quick links
+- [Getting started](GETTING_STARTED.md)
+- [Contributing](CONTRIBUTING.md)
+- [Issue tracker](https://github.com/jwheintz/GPT/issues)
 
-Quickstart (generic)
-1. Prerequisites
-   - Git >= 2.20
-   - Node.js (if applicable): node >= 16 and npm or yarn
-   - Python (if applicable): python >= 3.8 and pip
-   - Go (if applicable): go >= 1.18
-   - Docker (optional): docker >= 20.x
+## Running the app locally
+1. **Install prerequisites**
+   - Node.js ≥ 18 (includes npm)
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+3. **Start the dev server**
+   ```bash
+   npm run dev
+   ```
+   Vite will print a local URL (typically http://localhost:5173). Open it in your browser to use the app.
+4. **Create a production build** *(optional)*
+   ```bash
+   npm run build
+   npm run preview
+   ```
 
-2. Clone the repo
+## Features
+- Pomodoro timer with configurable work, short break, and long break durations.
+- Local-storage backed anchor notebook: add topics during focus blocks and tag them for later.
+- Spaced repetition engine that seeds four starter recall cards (+1d, +3d, +7d, +21d) and adapts interval lengths based on your feedback (Hard/OK/Easy).
+- Interleaved review queue that balances cards across tags to avoid topic fatigue.
+- JSON export so you can back up or transfer your study data.
+
+## Tips for students & teachers
+- Keep the timer running: anchors can only be added during work sessions to encourage focus time.
+- Use short minute durations (e.g., 1/1/2) while experimenting—update them in **Settings**.
+- Review cards frequently: once a card is graded, the next recall is scheduled automatically.
+- Export data before clearing your browser storage or switching devices.
+
+## Testing
+Run the build to ensure TypeScript type checks and Tailwind styles compile correctly:
 ```bash
-git clone https://github.com/jwheintz/GPT.git
-cd GPT
+npm run build
 ```
 
-3. Identify language / build system
-- package.json → Node.js / TypeScript
-- pyproject.toml, requirements.txt or setup.py → Python
-- go.mod → Go
-- Cargo.toml → Rust
-- Dockerfile → containerized app
-
-4. Common install / run commands (pick the block matching this repo)
-- Node.js
-```bash
-npm ci
-npm run build    # if present
-npm start        # or `npm run dev`
-npm test
-```
-- Python (venv)
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python -m pytest
-```
-- Go
-```bash
-go mod download
-go build ./...
-go test ./...
-```
-- Docker
-```bash
-docker build -t gpt-app .
-docker run -p 8080:8080 --env-file .env gpt-app
-```
-
-5. Run tests
-- Look for tests/ or __tests__/ or a Makefile target `test` and run accordingly:
-```bash
-npm test
-pytest
-go test ./...
-make test
-```
-
-6. Example usage
-- Replace the example below with repo-specific instructions:
-```bash
-# Start the app, then check health
-npm start
-curl http://localhost:8080/health
-```
-
-7. Need help?
-- Open an issue at https://github.com/jwheintz/GPT/issues and include:
-  - OS/version
-  - Steps to reproduce
-  - Logs or error output
-
-What to update in this README
-- Replace the one-line description and project status
-- Add exact prerequisites and commands
-- Add environment variables / API keys required
-- Add maintainers and contact info or whatever
+## Support
+Questions or ideas? Open an issue in the tracker linked above or reach out through the GitHub project discussions.
