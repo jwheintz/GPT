@@ -48,3 +48,4 @@ pip install openai pandas requests
 - If the GUI refuses to start, confirm you have a graphical session (Tkinter cannot render headless without X forwarding).
 - If OpenAI calls fail, re-check that the API key is valid and the selected model (`gpt-4` or `gpt-3.5-turbo`) is available to your account.
 - Gamma deck generation is optional; leave those fields blank if you do not use Gamma.
+- If you see a `SyntaxError` mentioning a line like `index 000000000000...`, it means the file was saved with git diff metadata instead of the real Python source. Re-download `gpt_quiz_builder.py` (or `AutoQuizv5.1.pyw`) directly from the repository rather than pasting a patch view.
