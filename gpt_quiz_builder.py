@@ -667,12 +667,29 @@ Do NOT include any extra commentary, prose, or markdown outside the JSON object.
 
     def parse_questions(self, response: str):
         try:
-            parsed = json.loads(response)
+            cleaned = response.strip()
+
+            if cleaned.startswith("```") and cleaned.endswith("```"):
+                cleaned = re.sub(r"^```(?:json)?", "", cleaned, flags=re.IGNORECASE).strip()
+                cleaned = re.sub(r"```$", "", cleaned).strip()
+
+            parsed = json.loads(cleaned)
+
+            if isinstance(parsed, dict):
+                if "questions" in parsed and isinstance(parsed["questions"], list):
+                    self.log("Parsed a questions dict with 'questions' key; using nested list.")
+                    parsed = parsed["questions"]
+                else:
+                    self.log("Parsed a single question object; wrapping in a list.")
+                    parsed = [parsed]
+
             if not isinstance(parsed, list):
                 self.log("Parsing error: Top-level JSON is not a list.")
                 return []
+
             if not parsed:
                 self.log("Warning: No questions parsed from API response.")
+
             return parsed
         except Exception as e:
             self.log("Parsing error: " + str(e))
