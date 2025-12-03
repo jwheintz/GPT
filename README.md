@@ -1,89 +1,51 @@
-# GPT
+# GPT Quiz Builder
 
-Short description
-- Replace this one-liner with a concise description of what this repository provides.
+A Tkinter desktop tool that uses OpenAI to generate multiple-choice quizzes, exports them to iSpring-compatible XLSX files, and can produce Gamma decks or truth-statement text files for instructors. The Windows-friendly `AutoQuizv5.1.pyw` launcher starts the GUI directly for double-click use.
 
-Status
-- TODO: update this with project status (alpha / beta / production), supported languages, and a short roadmap.
+## Status
+- Single-user desktop utility; tested with Python 3.8–3.11. Requires a display for the GUI (Tkinter).
 
-Quick links
-- Getting started: docs/GETTING_STARTED.md
+## Quick links
 - Contributing: CONTRIBUTING.md
+- Getting started: GETTING_STARTED.md
 - Issues: https://github.com/jwheintz/GPT/issues
 
-Quickstart (generic)
-1. Prerequisites
-   - Git >= 2.20
-   - Node.js (if applicable): node >= 16 and npm or yarn
-   - Python (if applicable): python >= 3.8 and pip
-   - Go (if applicable): go >= 1.18
-   - Docker (optional): docker >= 20.x
+## Prerequisites
+- Python ≥ 3.8 with Tkinter available (included in standard installers).
+- `pip` for installing Python packages.
+- An OpenAI API key (and optionally a Gamma API key) stored in `gptquizbuilder_config.json` via the GUI.
 
-2. Clone the repo
+## Setup
 ```bash
 git clone https://github.com/jwheintz/GPT.git
 cd GPT
-```
-
-3. Identify language / build system
-- package.json → Node.js / TypeScript
-- pyproject.toml, requirements.txt or setup.py → Python
-- go.mod → Go
-- Cargo.toml → Rust
-- Dockerfile → containerized app
-
-4. Common install / run commands (pick the block matching this repo)
-- Node.js
-```bash
-npm ci
-npm run build    # if present
-npm start        # or `npm run dev`
-npm test
-```
-- Python (venv)
-```bash
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python -m pytest
-```
-- Go
-```bash
-go mod download
-go build ./...
-go test ./...
-```
-- Docker
-```bash
-docker build -t gpt-app .
-docker run -p 8080:8080 --env-file .env gpt-app
+pip install openai pandas requests
 ```
 
-5. Run tests
-- Look for tests/ or __tests__/ or a Makefile target `test` and run accordingly:
-```bash
-npm test
-pytest
-go test ./...
-make test
-```
+## Running the app
+- **Windows (double-click):** launch `AutoQuizv5.1.pyw`. The first run will prompt for your OpenAI key; click **Save Settings** to persist it.
+- **Command line (any OS):**
+  ```bash
+  python gpt_quiz_builder.py
+  ```
+- Provide a display when running on Linux/macOS (e.g., from a desktop session or with `DISPLAY` configured). The app will exit early with a clear message if no display is available.
 
-6. Example usage
-- Replace the example below with repo-specific instructions:
-```bash
-# Start the app, then check health
-npm start
-curl http://localhost:8080/health
-```
+## How to test quickly
+- Run a bytecode smoke test (does not make network calls):
+  ```bash
+  python -m compileall gpt_quiz_builder.py AutoQuizv5.1.pyw
+  ```
+- Manual functional check:
+  1. Start the GUI (`AutoQuizv5.1.pyw` or `python gpt_quiz_builder.py`).
+  2. Enter your OpenAI API key and click **Save Settings**.
+  3. Set an Area of Focus and a small question count (e.g., 2) and click **Generate Full Quiz**.
+  4. Confirm an Excel file (default `full_quiz.xlsx`) is created and opens with 4-column options per question.
+  5. (Optional) Click **Generate Truth Statements TXT** to create a summary text file.
 
-7. Need help?
-- Open an issue at https://github.com/jwheintz/GPT/issues and include:
-  - OS/version
-  - Steps to reproduce
-  - Logs or error output
-
-What to update in this README
-- Replace the one-line description and project status
-- Add exact prerequisites and commands
-- Add environment variables / API keys required
-- Add maintainers and contact info or whatever
+## Troubleshooting
+- If the GUI refuses to start, confirm you have a graphical session (Tkinter cannot render headless without X forwarding).
+- If OpenAI calls fail, re-check that the API key is valid and the selected model (`gpt-4` or `gpt-3.5-turbo`) is available to your account.
+- Gamma deck generation is optional; leave those fields blank if you do not use Gamma.
+- If you see a `SyntaxError` mentioning a line like `index 000000000000...`, it means the file was saved with git diff metadata instead of the real Python source. Re-download `gpt_quiz_builder.py` (or `AutoQuizv5.1.pyw`) directly from the repository rather than pasting a patch view.
