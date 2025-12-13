@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Control Panel</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Additional teacher-specific styles */
+        .emergency-controls {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 2px solid #ef4444;
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3);
+        }
+        
+        .emergency-controls h2 {
+            color: white;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+        
+        .big-kill-switch {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+        
+        .connection-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .connection-card {
+            background: var(--background);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+        }
+        
+        .connection-card h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .connection-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .action-btn {
+            padding: 20px;
+            background: var(--surface-hover);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .action-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .action-btn .icon {
+            font-size: 32px;
+        }
+        
+        .log-viewer {
+            background: var(--background);
+            padding: 20px;
+            border-radius: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <h1>👨‍🏫 Teacher Control Panel</h1>
+                <p class="role-badge">Administrator</p>
+            </div>
+            <div class="header-right">
+                <div class="status-indicators">
+                    <div class="status-item">
+                        <span class="label">OBS:</span>
+                        <span id="obs-status" class="status-dot"></span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Server:</span>
+                        <span id="ws-status" class="status-dot"></span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Students:</span>
+                        <span id="student-count" class="status-indicator">0</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Emergency Controls -->
+        <div class="emergency-controls">
+            <h2>🚨 Emergency Controls</h2>
+            <div class="big-kill-switch">
+                <div style="text-align: right;">
+                    <h3 style="margin: 0; font-size: 20px; color: white;">Master Kill Switch</h3>
+                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.7); font-size: 14px;">
+                        Instantly disable all student controls
+                    </p>
+                </div>
+                <label class="switch" style="width: 100px; height: 55px;">
+                    <input type="checkbox" id="kill-switch">
+                    <span class="slider"></span>
+                </label>
+                <div style="text-align: left;">
+                    <span id="kill-switch-status" style="font-size: 24px; font-weight: bold; color: white;">
+                        ACTIVE
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📊 System Status</h2>
+            </div>
+            <div class="connection-panel">
+                <div class="connection-card">
+                    <h3>Active Students</h3>
+                    <div class="value" id="active-students">0</div>
+                </div>
+                <div class="connection-card">
+                    <h3>Commands Today</h3>
+                    <div class="value" id="command-count">0</div>
+                </div>
+                <div class="connection-card">
+                    <h3>Server Uptime</h3>
+                    <div class="value" id="uptime" style="font-size: 18px;">--:--</div>
+                </div>
+                <div class="connection-card">
+                    <h3>OBS Status</h3>
+                    <div class="value" id="obs-status-text" style="font-size: 18px; color: var(--secondary-color);">Connected</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section">
+            <div class="section-header">
+                <h2>⚡ Quick Actions</h2>
+                <p class="section-desc">Common teacher controls</p>
+            </div>
+            <div class="quick-actions">
+                <button class="action-btn" onclick="resetAllFilters()">
+                    <span class="icon">🔄</span>
+                    <span>Reset All Filters</span>
+                </button>
+                
+                <button class="action-btn" onclick="refreshConfig()">
+                    <span class="icon">⚙️</span>
+                    <span>Refresh Config</span>
+                </button>
+                
+                <button class="action-btn" onclick="clearActivityLog()">
+                    <span class="icon">🗑️</span>
+                    <span>Clear Log</span>
+                </button>
+                
+                <button class="action-btn" onclick="exportLog()">
+                    <span class="icon">💾</span>
+                    <span>Export Log</span>
+                </button>
+                
+                <button class="action-btn" onclick="testConnection()">
+                    <span class="icon">🔌</span>
+                    <span>Test Connection</span>
+                </button>
+                
+                <button class="action-btn" onclick="showStats()">
+                    <span class="icon">📈</span>
+                    <span>View Stats</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Manual Controls -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🎛️ Manual Controls</h2>
+                <p class="section-desc">Direct OBS control (bypasses student interface)</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h3 style="margin-bottom: 15px;">Camera Filters</h3>
+                    <div class="control-grid compact">
+                        <button class="control-btn" data-command="toggle_filter" data-source="Camera" data-filter="Color Correction">
+                            <span class="icon">🎨</span>
+                            <span class="label">Color</span>
+                        </button>
+                        <button class="control-btn" data-command="toggle_filter" data-source="Camera" data-filter="Blur">
+                            <span class="icon">💫</span>
+                            <span class="label">Blur</span>
+                        </button>
+                        <button class="control-btn" data-command="toggle_filter" data-source="Camera" data-filter="Sharpen">
+                            <span class="icon">✨</span>
+                            <span class="label">Sharpen</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="margin-bottom: 15px;">Source Visibility</h3>
+                    <div class="control-grid compact">
+                        <button class="control-btn" data-command="toggle_source" data-scene="Main" data-source="Overlay">
+                            <span class="icon">📊</span>
+                            <span class="label">Overlay</span>
+                        </button>
+                        <button class="control-btn" data-command="toggle_source" data-scene="Main" data-source="Background">
+                            <span class="icon">🖼️</span>
+                            <span class="label">Background</span>
+                        </button>
+                        <button class="control-btn" data-command="toggle_source" data-scene="Main" data-source="Text">
+                            <span class="icon">📝</span>
+                            <span class="label">Text</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Monitor -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📡 Real-Time Activity Monitor</h2>
+                <p class="section-desc">Live feed of all commands</p>
+            </div>
+            <div class="log-viewer" id="activity-monitor">
+                <p style="color: var(--text-secondary); text-align: center;">Waiting for activity...</p>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div class="section">
+            <div class="section-header">
+                <h2>⚙️ Configuration</h2>
+            </div>
+            <div style="display: grid; gap: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">
+                        Rate Limit (commands per window):
+                    </label>
+                    <input type="number" id="rate-limit" value="10" min="1" max="100" 
+                           style="width: 100%; padding: 10px; background: var(--background); 
+                                  border: 1px solid var(--border); border-radius: 8px; 
+                                  color: var(--text-primary);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">
+                        Server URL (for students):
+                    </label>
+                    <input type="text" id="server-url" readonly 
+                           style="width: 100%; padding: 10px; background: var(--background); 
+                                  border: 1px solid var(--border); border-radius: 8px; 
+                                  color: var(--text-primary);">
+                    <button onclick="copyServerUrl()" class="btn btn-secondary" 
+                            style="margin-top: 10px; width: auto; padding: 8px 16px;">
+                        Copy URL
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Teacher Control Panel - Classroom Interactive System v1.0</p>
+            <p class="small">For student interface, open: <a href="index.html" style="color: var(--primary-color);">index.html</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+        let commandCount = 0;
+        let startTime = Date.now();
+
+        // Auto-login as teacher
+        function connectAsTeacher() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+            
+            document.getElementById('server-url').value = window.location.origin;
+            
+            // Prompt for teacher password
+            const password = prompt('Enter teacher password:');
+            if (!password) return;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                updateStatus('ws-status', true);
+                ws.send(JSON.stringify({
+                    type: 'auth',
+                    password: password,
+                    role: 'teacher'
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+            
+            ws.onerror = () => updateStatus('ws-status', false);
+            ws.onclose = () => {
+                updateStatus('ws-status', false);
+                setTimeout(connectAsTeacher, 3000);
+            };
+        }
+
+        function handleMessage(data) {
+            switch(data.type) {
+                case 'auth_success':
+                    console.log('Teacher authenticated');
+                    break;
+                case 'auth_failed':
+                    alert('Authentication failed: ' + data.message);
+                    break;
+                case 'state_update':
+                    updateKillSwitch(data.killSwitch);
+                    updateStatus('obs-status', data.obsConnected);
+                    document.getElementById('obs-status-text').textContent = 
+                        data.obsConnected ? 'Connected' : 'Disconnected';
+                    break;
+                case 'kill_switch_update':
+                    updateKillSwitch(data.enabled);
+                    break;
+                case 'command_success':
+                case 'filter_toggled':
+                case 'scene_changed':
+                    commandCount++;
+                    document.getElementById('command-count').textContent = commandCount;
+                    logActivity(data);
+                    break;
+            }
+        }
+
+        function updateStatus(elementId, connected) {
+            const el = document.getElementById(elementId);
+            el.className = 'status-dot ' + (connected ? 'connected' : 'disconnected');
+        }
+
+        function updateKillSwitch(enabled) {
+            document.getElementById('kill-switch').checked = enabled;
+            document.getElementById('kill-switch-status').textContent = 
+                enabled ? 'DISABLED' : 'ACTIVE';
+            document.getElementById('kill-switch-status').style.color = 
+                enabled ? '#ef4444' : '#10b981';
+        }
+
+        function logActivity(data) {
+            const monitor = document.getElementById('activity-monitor');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            let message = '';
+            if (data.type === 'filter_toggled') {
+                message = `Filter: ${data.filterName} ${data.enabled ? 'ON' : 'OFF'}`;
+            } else if (data.type === 'scene_changed') {
+                message = `Scene: ${data.sceneName}`;
+            } else {
+                message = data.message || data.type;
+            }
+            
+            entry.innerHTML = `
+                <span>[${new Date().toLocaleTimeString()}] ${message}</span>
+            `;
+            
+            monitor.insertBefore(entry, monitor.firstChild);
+            
+            // Keep last 100 entries
+            while (monitor.children.length > 100) {
+                monitor.removeChild(monitor.lastChild);
+            }
+        }
+
+        // Event handlers
+        document.getElementById('kill-switch').addEventListener('change', (e) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'kill_switch',
+                    enabled: e.target.checked
+                }));
+            }
+        });
+
+        // Control buttons
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.control-btn');
+            if (btn && ws && ws.readyState === WebSocket.OPEN) {
+                const command = btn.dataset.command;
+                const params = {};
+                
+                if (btn.dataset.source) params.sourceName = btn.dataset.source;
+                if (btn.dataset.filter) params.filterName = btn.dataset.filter;
+                if (btn.dataset.scene) params.sceneName = btn.dataset.scene;
+                
+                ws.send(JSON.stringify({
+                    type: 'obs_command',
+                    command: command,
+                    params: params
+                }));
+            }
+        });
+
+        // Quick action functions
+        function resetAllFilters() {
+            alert('Reset all filters - implement as needed for your setup');
+        }
+
+        function refreshConfig() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'obs_command',
+                    command: 'get_scenes',
+                    params: {}
+                }));
+            }
+        }
+
+        function clearActivityLog() {
+            document.getElementById('activity-monitor').innerHTML = 
+                '<p style="color: var(--text-secondary); text-align: center;">Log cleared</p>';
+        }
+
+        function exportLog() {
+            const log = document.getElementById('activity-monitor').innerText;
+            const blob = new Blob([log], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `activity-log-${new Date().toISOString()}.txt`;
+            a.click();
+        }
+
+        function testConnection() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                alert('✅ Connection is active!');
+            } else {
+                alert('❌ Not connected. Check server.');
+            }
+        }
+
+        function showStats() {
+            alert(`Commands Today: ${commandCount}\nUptime: ${formatUptime()}`);
+        }
+
+        function copyServerUrl() {
+            const url = document.getElementById('server-url').value;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('URL copied to clipboard!');
+            });
+        }
+
+        function formatUptime() {
+            const seconds = Math.floor((Date.now() - startTime) / 1000);
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        // Update uptime every second
+        setInterval(() => {
+            document.getElementById('uptime').textContent = formatUptime();
+        }, 1000);
+
+        // Auto-connect on load
+        connectAsTeacher();
+    </script>
+</body>
+</html>

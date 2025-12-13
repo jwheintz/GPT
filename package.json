@@ -1,0 +1,21 @@
+{
+  "name": "classroom-obs-control",
+  "version": "1.0.0",
+  "description": "Web-based classroom interaction system for OBS Studio control",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["obs", "education", "streaming", "classroom"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "obs-websocket-js": "^5.0.5",
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  }
+}

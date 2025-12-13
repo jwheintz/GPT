@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Control Panel</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="login-container" class="container">
+        <div class="login-box">
+            <h1>🎓 Classroom Control</h1>
+            <p class="subtitle">Interactive Learning Interface</p>
+            
+            <div class="login-form">
+                <input type="password" id="password" placeholder="Enter access code" />
+                
+                <div class="role-selector">
+                    <label>
+                        <input type="radio" name="role" value="student" checked>
+                        <span>Student</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="role" value="teacher">
+                        <span>Teacher</span>
+                    </label>
+                </div>
+                
+                <button id="login-btn" class="btn btn-primary">Enter Classroom</button>
+                <div id="login-error" class="error-message"></div>
+            </div>
+            
+            <div class="info-box">
+                <p>This interface allows you to interact with the classroom presentation.</p>
+                <p class="small">Server Status: <span id="server-status" class="status-indicator">Checking...</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="control-panel" class="container" style="display: none;">
+        <header class="header">
+            <div class="header-left">
+                <h1>🎓 Classroom Control Panel</h1>
+                <p class="role-badge" id="role-badge">Student</p>
+            </div>
+            <div class="header-right">
+                <div class="status-indicators">
+                    <div class="status-item">
+                        <span class="label">OBS:</span>
+                        <span id="obs-status" class="status-dot"></span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Server:</span>
+                        <span id="ws-status" class="status-dot"></span>
+                    </div>
+                </div>
+                <button id="logout-btn" class="btn btn-small">Logout</button>
+            </div>
+        </header>
+
+        <!-- Teacher Controls -->
+        <div id="teacher-controls" style="display: none;">
+            <div class="section">
+                <div class="section-header">
+                    <h2>🎛️ Teacher Controls</h2>
+                </div>
+                
+                <div class="kill-switch-container">
+                    <div class="kill-switch-info">
+                        <h3>Emergency Stop</h3>
+                        <p>Disable all student interactions instantly</p>
+                    </div>
+                    <label class="switch large">
+                        <input type="checkbox" id="kill-switch">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="kill-switch-label" class="kill-switch-status">Student Controls Active</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>⚙️ Configuration</h2>
+                <div class="config-panel">
+                    <button id="refresh-config-btn" class="btn btn-secondary">Refresh Available Controls</button>
+                    <button id="show-config-btn" class="btn btn-secondary">Show Configuration Panel</button>
+                </div>
+                
+                <div id="config-editor" style="display: none;">
+                    <h3>Available Scenes & Filters</h3>
+                    <div id="obs-config-display"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Controls -->
+        <div id="student-controls">
+            <div id="kill-switch-message" class="warning-banner" style="display: none;">
+                ⚠️ Interactive controls are currently disabled by the teacher.
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>🎨 Visual Effects</h2>
+                    <p class="section-desc">Click buttons to trigger visual changes</p>
+                </div>
+                
+                <div class="control-grid">
+                    <button class="control-btn effect-btn" data-command="toggle_filter" data-source="Camera" data-filter="Color Correction">
+                        <span class="icon">🎨</span>
+                        <span class="label">Color Effect</span>
+                    </button>
+                    
+                    <button class="control-btn effect-btn" data-command="toggle_filter" data-source="Camera" data-filter="Blur">
+                        <span class="icon">💫</span>
+                        <span class="label">Blur Effect</span>
+                    </button>
+                    
+                    <button class="control-btn effect-btn" data-command="toggle_filter" data-source="Camera" data-filter="Chroma Key">
+                        <span class="icon">🖼️</span>
+                        <span class="label">Green Screen</span>
+                    </button>
+                    
+                    <button class="control-btn effect-btn" data-command="toggle_filter" data-source="Camera" data-filter="Sharpen">
+                        <span class="icon">✨</span>
+                        <span class="label">Sharpen</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>🎬 Scene Elements</h2>
+                    <p class="section-desc">Show or hide elements on screen</p>
+                </div>
+                
+                <div class="control-grid">
+                    <button class="control-btn scene-btn" data-command="toggle_source" data-scene="Main" data-source="Overlay">
+                        <span class="icon">📊</span>
+                        <span class="label">Toggle Overlay</span>
+                    </button>
+                    
+                    <button class="control-btn scene-btn" data-command="toggle_source" data-scene="Main" data-source="Background">
+                        <span class="icon">🖼️</span>
+                        <span class="label">Toggle Background</span>
+                    </button>
+                    
+                    <button class="control-btn scene-btn" data-command="toggle_source" data-scene="Main" data-source="Text">
+                        <span class="icon">📝</span>
+                        <span class="label">Toggle Text</span>
+                    </button>
+                    
+                    <button class="control-btn scene-btn" data-command="toggle_source" data-scene="Main" data-source="Logo">
+                        <span class="icon">⭐</span>
+                        <span class="label">Toggle Logo</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>🎭 Quick Reactions</h2>
+                    <p class="section-desc">Fun visual reactions</p>
+                </div>
+                
+                <div class="control-grid reactions">
+                    <button class="control-btn reaction-btn" data-command="toggle_filter" data-source="Camera" data-filter="Rainbow">
+                        <span class="icon">🌈</span>
+                        <span class="label">Rainbow</span>
+                    </button>
+                    
+                    <button class="control-btn reaction-btn" data-command="toggle_filter" data-source="Camera" data-filter="Pixelate">
+                        <span class="icon">🎮</span>
+                        <span class="label">Pixelate</span>
+                    </button>
+                    
+                    <button class="control-btn reaction-btn" data-command="toggle_filter" data-source="Camera" data-filter="Grayscale">
+                        <span class="icon">⚫</span>
+                        <span class="label">Black & White</span>
+                    </button>
+                    
+                    <button class="control-btn reaction-btn" data-command="toggle_filter" data-source="Camera" data-filter="Zoom">
+                        <span class="icon">🔍</span>
+                        <span class="label">Zoom</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📡 Activity Feed</h2>
+            </div>
+            <div id="activity-feed" class="activity-feed">
+                <p class="feed-empty">Waiting for activities...</p>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Classroom Interactive Control System v1.0</p>
+            <p class="small">Built for engaging educational experiences</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
