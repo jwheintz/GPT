@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Control</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <h1>🎓 Classroom Control</h1>
+            <p>Enter password to access controls</p>
+            <input type="password" id="password-input" placeholder="Password" autocomplete="off">
+            <button id="login-btn" onclick="login()">Access Controls</button>
+            <div id="login-error" class="error-message"></div>
+        </div>
+    </div>
+
+    <div id="control-screen" class="screen hidden">
+        <div class="header">
+            <h1>🎓 Classroom Control</h1>
+            <div class="status-indicator">
+                <span id="connection-status" class="status-badge disconnected">Disconnected</span>
+                <span id="emergency-status" class="status-badge emergency hidden">⚠️ Emergency Stop Active</span>
+            </div>
+        </div>
+
+        <div class="controls-container">
+            <div class="control-section">
+                <h2>OBS Filters</h2>
+                <div class="filter-controls">
+                    <div class="input-group">
+                        <label>Scene:</label>
+                        <select id="scene-select">
+                            <option value="">Loading scenes...</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Source:</label>
+                        <select id="source-select">
+                            <option value="">Select a scene first</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Filter:</label>
+                        <select id="filter-select">
+                            <option value="">Select a source first</option>
+                        </select>
+                    </div>
+                    <div class="button-group">
+                        <button id="toggle-filter-btn" onclick="toggleFilter()" disabled>Toggle Filter</button>
+                        <button id="enable-filter-btn" onclick="setFilter(true)" disabled>Enable</button>
+                        <button id="disable-filter-btn" onclick="setFilter(false)" disabled>Disable</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h2>Quick Actions</h2>
+                <div class="quick-actions">
+                    <button class="action-btn" onclick="refreshScenes()">🔄 Refresh Scenes</button>
+                    <button class="action-btn" onclick="checkStatus()">📊 Check Status</button>
+                </div>
+            </div>
+
+            <div class="control-section emergency-section">
+                <h2>⚠️ Emergency Stop</h2>
+                <p class="warning-text">This will immediately stop all controls. Only use in emergencies.</p>
+                <button id="emergency-stop-btn" class="emergency-btn" onclick="emergencyStop()">STOP ALL CONTROLS</button>
+            </div>
+        </div>
+
+        <div id="message-area" class="message-area"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

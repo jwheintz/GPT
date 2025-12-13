@@ -1,0 +1,375 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+
+.screen {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.screen.hidden {
+    display: none;
+}
+
+/* Login Screen */
+.login-container {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    margin-top: 100px;
+}
+
+.login-container h1 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 2.5em;
+}
+
+.login-container p {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+#password-input {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1em;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    transition: border-color 0.3s;
+}
+
+#password-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+#login-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1em;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-weight: 600;
+}
+
+#login-btn:hover {
+    background: #5568d3;
+}
+
+#login-btn:active {
+    transform: scale(0.98);
+}
+
+.error-message {
+    color: #e74c3c;
+    margin-top: 15px;
+    font-size: 0.9em;
+    min-height: 20px;
+}
+
+/* Control Screen */
+.header {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.header h1 {
+    color: #667eea;
+    font-size: 2em;
+}
+
+.status-indicator {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.status-badge.connected {
+    background: #2ecc71;
+    color: white;
+}
+
+.status-badge.disconnected {
+    background: #e74c3c;
+    color: white;
+}
+
+.status-badge.emergency {
+    background: #f39c12;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.status-badge.hidden {
+    display: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.controls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.control-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.control-section h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.filter-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-weight: 600;
+    color: #555;
+    font-size: 0.95em;
+}
+
+.input-group select {
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.input-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.input-group select:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.button-group button {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px 20px;
+    font-size: 1em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+#toggle-filter-btn {
+    background: #667eea;
+    color: white;
+}
+
+#toggle-filter-btn:hover:not(:disabled) {
+    background: #5568d3;
+}
+
+#enable-filter-btn {
+    background: #2ecc71;
+    color: white;
+}
+
+#enable-filter-btn:hover:not(:disabled) {
+    background: #27ae60;
+}
+
+#disable-filter-btn {
+    background: #e74c3c;
+    color: white;
+}
+
+#disable-filter-btn:hover:not(:disabled) {
+    background: #c0392b;
+}
+
+.button-group button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.button-group button:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 12px 20px;
+    font-size: 1em;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-weight: 600;
+}
+
+.action-btn:hover {
+    background: #2980b9;
+}
+
+.action-btn:active {
+    transform: scale(0.98);
+}
+
+.emergency-section {
+    border: 3px solid #f39c12;
+    background: #fff9e6;
+}
+
+.emergency-section h2 {
+    color: #f39c12;
+}
+
+.warning-text {
+    color: #666;
+    margin-bottom: 15px;
+    font-size: 0.95em;
+}
+
+.emergency-btn {
+    width: 100%;
+    padding: 18px;
+    font-size: 1.2em;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.emergency-btn:hover {
+    background: #c0392b;
+    transform: scale(1.02);
+}
+
+.emergency-btn:active {
+    transform: scale(0.98);
+}
+
+.message-area {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 20px;
+    min-height: 50px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-size: 0.9em;
+    color: #666;
+}
+
+.message-area.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message-area.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.message-area.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .button-group button {
+        width: 100%;
+    }
+
+    .quick-actions {
+        flex-direction: column;
+    }
+
+    .action-btn {
+        width: 100%;
+    }
+}
