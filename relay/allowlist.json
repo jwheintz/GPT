@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "roomId": "classroom",
+  "allowed": [
+    {
+      "label": "Pixelate camera (toggle)",
+      "type": "filter.toggle",
+      "payload": { "sourceName": "Camera", "filterName": "Pixelate" }
+    },
+    {
+      "label": "Confetti overlay (toggle)",
+      "type": "filter.toggle",
+      "payload": { "sourceName": "Overlay", "filterName": "Confetti" }
+    },
+    {
+      "label": "Back to Lesson scene",
+      "type": "scene.set",
+      "payload": { "sceneName": "Lesson" }
+    },
+    {
+      "label": "Applause SFX (mute toggle)",
+      "type": "input.muteToggle",
+      "payload": { "inputName": "Applause" }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "classroom-obs-control-interface",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Password-protected student web controls relayed to a local OBS studio machine.",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "relay": "node relay/index.js",
+    "agent": "node agent/index.js",
+    "lint": "node -c relay/index.js && node -c agent/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "obs-websocket-js": "^5.0.6",
+    "ws": "^8.18.0"
+  }
+}

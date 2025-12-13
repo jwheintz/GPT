@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Classroom Controls</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #101a31;
+        --text: #e8eefc;
+        --muted: #9fb0d0;
+        --btn: #243a6b;
+        --btn2: #1b2c52;
+        --danger: #7a1f2a;
+        --border: rgba(255, 255, 255, 0.12);
+      }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 20% 0%, #152855 0%, var(--bg) 45%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      .card {
+        background: rgba(16, 26, 49, 0.75);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      @media (min-width: 820px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 12px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input {
+        width: 100%;
+        padding: 10px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.18);
+        color: var(--text);
+        outline: none;
+      }
+      .btn {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, var(--btn) 0%, var(--btn2) 100%);
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.danger {
+        background: linear-gradient(180deg, #9a2736 0%, var(--danger) 100%);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 12px;
+        background: rgba(0, 0, 0, 0.15);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #9aa7c7;
+      }
+      .dot.ok {
+        background: #35d07f;
+      }
+      .dot.bad {
+        background: #ff5c72;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      @media (min-width: 820px) {
+        .split {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        color: #cfe1ff;
+      }
+      .footer {
+        margin-top: 12px;
+        opacity: 0.9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>Classroom Controls</h1>
+        <p>
+          This page sends small “class participation” commands to the instructor’s OBS computer.
+          If the instructor disables controls, everything stops immediately.
+        </p>
+
+        <div class="row" style="justify-content: space-between; margin-top: 14px">
+          <div class="pill"><span id="statusDot" class="dot"></span><span id="statusText">Not connected</span></div>
+          <button class="btn" id="btnTest">Test connection</button>
+        </div>
+
+        <div class="split" style="margin-top: 14px">
+          <div>
+            <label>Relay API base URL</label>
+            <input id="relayBase" placeholder="https://your-relay.example.com" />
+            <div class="small footer">This is NOT hosted on Squarespace; Squarespace hosts this page, your relay runs elsewhere.</div>
+          </div>
+          <div>
+            <label>Student token</label>
+            <input id="studentToken" placeholder="Paste token your teacher configured" />
+            <div class="small footer">If the instructor rotates tokens or locks controls, requests will stop.</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 14px">
+          <h1 style="font-size: 16px; margin-bottom: 6px">Student buttons</h1>
+          <p>These buttons are safe because the relay enforces a server-side allowlist.</p>
+          <div id="actions" class="grid" style="margin-top: 12px"></div>
+          <div class="small footer">
+            Instructor setup: edit <code>relay/allowlist.json</code> on the relay server and (optionally) the config block in this HTML.
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 12px">
+          <h1 style="font-size: 16px; margin-bottom: 6px">What to tell students</h1>
+          <p class="small">
+            If buttons do nothing, controls may be temporarily disabled by the instructor.
+            This is intentional so class can continue.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ======= Instructor config (edit this block before embedding on Squarespace) =======
+      // NOTE: This config only affects the UI. The RELAY enforces the real allowlist via relay/allowlist.json.
+      window.CLASSROOM_CONTROLS = window.CLASSROOM_CONTROLS || {
+        relayBase: "",
+        studentToken: "",
+        // Optional per-button cooldown (ms) to reduce spam.
+        defaultCooldownMs: 1200,
+        actions: [
+          { group: "Fun", label: "Pixelate camera (toggle)", type: "filter.toggle", payload: { sourceName: "Camera", filterName: "Pixelate" } },
+          { group: "Fun", label: "Confetti overlay (toggle)", type: "filter.toggle", payload: { sourceName: "Overlay", filterName: "Confetti" } },
+          { group: "Class", label: "Back to Lesson scene", type: "scene.set", payload: { sceneName: "Lesson" } },
+          { group: "Sound", label: "Applause (mute toggle)", type: "input.muteToggle", payload: { inputName: "Applause" } }
+        ]
+      };
+
+      const el = (id) => document.getElementById(id);
+
+      const statusDot = el('statusDot');
+      const statusText = el('statusText');
+      const actionsEl = el('actions');
+
+      function setStatus(ok, text) {
+        statusDot.className = 'dot ' + (ok ? 'ok' : 'bad');
+        statusText.textContent = text;
+      }
+
+      function cfg() {
+        const base = el('relayBase').value.trim().replace(/\/$/, '') || (window.CLASSROOM_CONTROLS.relayBase || '').replace(/\/$/, '');
+        const token = el('studentToken').value.trim() || (window.CLASSROOM_CONTROLS.studentToken || '');
+        return { base, token };
+      }
+
+      async function callApi(path, body) {
+        const { base, token } = cfg();
+        if (!base) throw new Error('Missing relay base URL');
+        if (!token) throw new Error('Missing student token');
+
+        const r = await fetch(base + path, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token
+          },
+          body: JSON.stringify(body)
+        });
+
+        const json = await r.json().catch(() => ({}));
+        if (!r.ok || json.ok === false) {
+          const msg = json.error || r.statusText || 'request_failed';
+          throw new Error(msg);
+        }
+        return json;
+      }
+
+      async function testConnection() {
+        const { base } = cfg();
+        if (!base) {
+          setStatus(false, 'Enter relay URL');
+          return;
+        }
+        try {
+          const r = await fetch(base + '/health');
+          const j = await r.json();
+          if (!j.ok) throw new Error('bad health');
+          const agent = j.agentConnected ? 'agent online' : 'agent offline';
+          const lock = j.locked ? 'LOCKED' : 'unlocked';
+          const allow = typeof j.allowlistCount === 'number' ? ` · ${j.allowlistCount} allowed` : '';
+          setStatus(!j.locked, `${agent} · ${lock}${allow}`);
+        } catch (e) {
+          setStatus(false, 'Relay unreachable');
+        }
+      }
+
+      el('btnTest').addEventListener('click', testConnection);
+
+      function renderActions() {
+        const groups = new Map();
+        const actions = Array.isArray(window.CLASSROOM_CONTROLS.actions) ? window.CLASSROOM_CONTROLS.actions : [];
+        for (const a of actions) {
+          const g = (a.group || 'Controls').toString();
+          if (!groups.has(g)) groups.set(g, []);
+          groups.get(g).push(a);
+        }
+
+        actionsEl.innerHTML = '';
+
+        for (const [group, items] of groups.entries()) {
+          const card = document.createElement('div');
+          card.className = 'card';
+
+          const h = document.createElement('h1');
+          h.style.fontSize = '16px';
+          h.style.marginBottom = '6px';
+          h.textContent = group;
+
+          const p = document.createElement('p');
+          p.textContent = 'Tap a button to send a small change to OBS.';
+
+          const row = document.createElement('div');
+          row.className = 'row';
+
+          for (const action of items) {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.textContent = action.label || action.type;
+
+            const cooldown = Number(action.cooldownMs || window.CLASSROOM_CONTROLS.defaultCooldownMs || 0) || 0;
+
+            btn.addEventListener('click', async () => {
+              try {
+                btn.disabled = true;
+                await callApi('/api/command', { type: action.type, payload: action.payload || {} });
+                setStatus(true, 'Sent');
+              } catch (e) {
+                setStatus(false, String(e.message || e));
+              } finally {
+                setTimeout(() => (btn.disabled = false), Math.max(0, cooldown));
+              }
+            });
+
+            row.appendChild(btn);
+          }
+
+          card.appendChild(h);
+          card.appendChild(p);
+          card.appendChild(row);
+          actionsEl.appendChild(card);
+        }
+      }
+
+      // Friendly default
+      // Pre-fill from config (still editable)
+      if (window.CLASSROOM_CONTROLS.relayBase) el('relayBase').value = window.CLASSROOM_CONTROLS.relayBase;
+      if (window.CLASSROOM_CONTROLS.studentToken) el('studentToken').value = window.CLASSROOM_CONTROLS.studentToken;
+      renderActions();
+      setStatus(false, 'Configure relay + token');
+    </script>
+  </body>
+</html>
