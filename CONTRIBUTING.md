@@ -1,60 +1,121 @@
-# Contributing
+# Contributing to Classroom Control
 
-Thanks for contributing! This document explains how to make contributions smoothly.
+Thank you for your interest in contributing! This project aims to make classroom interactions more engaging for educators.
 
-Principles
-- Keep changes small and focused.
-- Add tests for new functionality and bug fixes.
-- Update documentation for behavior changes.
+## Project Structure
 
-Development workflow
-1. Fork (if necessary) and clone.
-2. Create a branch:
-```bash
-git checkout -b feat/<short-description>
 ```
-3. Make changes and run tests and linters locally.
-4. Commit with a clear message:
-```
-git commit -m "feat: add X to support Y"
-```
-5. Push and open a PR targeting `main` (or default branch).
-
-Branch naming
-- feat/<short-desc>
-- fix/<short-desc>
-- docs/<short-desc>
-- chore/<short-desc>
-
-Commit message style (recommended)
-- Use imperative mood and a type prefix: feat, fix, docs, chore, test, refactor
-- Example: `fix: handle nil pointer in preprocess`
-
-Testing
-- Add tests next to the code they exercise and ensure they pass:
-```bash
-npm test
-pytest
-go test ./...
+classroom-control/
+├── web/                    # Web frontend (static files)
+│   ├── index.html         # Main student interface
+│   ├── style.css          # Styling
+│   ├── config.js          # Configuration template
+│   └── app.js             # Frontend logic
+│
+├── local-relay/           # Windows relay application
+│   ├── relay.py           # Main application
+│   ├── voicemod.py        # VoiceMod integration module
+│   ├── config.py          # Configuration template
+│   └── requirements.txt   # Python dependencies
+│
+├── obs-effects/           # Sample OBS browser sources
+│   ├── confetti.html
+│   ├── emoji-popup.html
+│   └── floating-reactions.html
+│
+├── README.md              # Main documentation
+└── GETTING_STARTED.md     # Setup guide
 ```
 
-Code review checklist
-- Is the scope small and clear?
-- Are there tests for new behavior?
-- Any security implications? (secrets, injection risks)
-- Is documentation updated?
-- Is code style consistent?
+## Development Setup
 
-Pull request template (suggested)
-- Title: concise and prefixed with the type (feat/fix/docs)
-- Body:
-  - Summary of changes
-  - Related issue (if any)
-  - How to test
-  - Screenshots / logs (if relevant)
+### Web Frontend
 
-Maintainers
-- Primary contact: @jwheintz
+The frontend is pure HTML/CSS/JS with no build step:
+1. Edit files in `/web`
+2. Open `index.html` in browser to test
+3. Configure `config.js` with your Supabase details
 
-License and CLA
-- Ensure your contribution complies with the repository license.
+### Local Relay
+
+1. Create a virtual environment:
+   ```bash
+   cd local-relay
+   python -m venv venv
+   venv\Scripts\activate  # Windows
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Copy and edit config:
+   ```bash
+   copy config.py config_local.py
+   ```
+4. Run:
+   ```bash
+   python relay.py
+   ```
+
+## Areas for Contribution
+
+### High Priority
+- [ ] Teacher dashboard (real-time view of incoming commands)
+- [ ] Poll result aggregation and display
+- [ ] More visual effect templates
+- [ ] Integration tests
+
+### Nice to Have
+- [ ] Dark mode toggle in web UI
+- [ ] Custom themes/branding options
+- [ ] Multi-room support
+- [ ] Export/import configuration
+- [ ] Stream Deck plugin
+
+### VoiceMod Integration
+- [ ] Test with actual VoiceMod installation
+- [ ] Document available voice IDs
+- [ ] Add soundboard support
+
+## Code Style
+
+### Python
+- Follow PEP 8
+- Use type hints where helpful
+- Keep functions focused and documented
+
+### JavaScript
+- Use ES6+ features
+- Keep it dependency-free (except Supabase client)
+- Comment complex logic
+
+### CSS
+- Use CSS variables for theming
+- Mobile-first responsive design
+- Support dark mode via `prefers-color-scheme`
+
+## Testing
+
+Before submitting:
+1. Test web interface in Chrome, Firefox, Safari
+2. Test on mobile devices
+3. Test relay with OBS WebSocket
+4. Verify kill switch works
+
+## Pull Request Process
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit PR with clear description
+
+## Questions?
+
+Open an issue for:
+- Bug reports
+- Feature requests
+- Questions about setup
+- Ideas for improvement
+
+Thank you for helping make education more interactive! 🎓

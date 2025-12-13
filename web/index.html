@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Control Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Password Gate -->
+    <div id="password-gate" class="gate-overlay">
+        <div class="gate-container">
+            <div class="gate-header">
+                <div class="gate-icon">🎓</div>
+                <h1>Classroom Control</h1>
+                <p>Enter the class code to join</p>
+            </div>
+            <form id="password-form">
+                <input type="password" id="password-input" placeholder="Enter class code..." autocomplete="off" autofocus>
+                <button type="submit" class="btn-primary">Join Class</button>
+            </form>
+            <p id="password-error" class="error-text"></p>
+        </div>
+    </div>
+
+    <!-- Main Control Panel -->
+    <div id="control-panel" class="hidden">
+        <header class="panel-header">
+            <div class="header-left">
+                <span class="logo">🎓</span>
+                <h1>Classroom Control</h1>
+            </div>
+            <div class="header-right">
+                <div id="connection-status" class="status-indicator offline">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+                <button id="logout-btn" class="btn-secondary btn-small">Leave</button>
+            </div>
+        </header>
+
+        <main class="panel-content">
+            <!-- System Paused Banner -->
+            <div id="paused-banner" class="paused-banner hidden">
+                <span class="pause-icon">⏸️</span>
+                <span>Interactions are currently paused by the instructor</span>
+            </div>
+
+            <!-- Cooldown Timer -->
+            <div id="cooldown-display" class="cooldown-display hidden">
+                <span>Next interaction available in: </span>
+                <span id="cooldown-timer">0</span>s
+            </div>
+
+            <!-- Visual Effects Section -->
+            <section class="control-section">
+                <h2>
+                    <span class="section-icon">✨</span>
+                    Visual Effects
+                </h2>
+                <div class="button-grid" id="visual-effects">
+                    <button class="effect-btn" data-action="confetti" data-category="visual">
+                        <span class="effect-icon">🎉</span>
+                        <span class="effect-name">Confetti</span>
+                    </button>
+                    <button class="effect-btn" data-action="thumbsup" data-category="visual">
+                        <span class="effect-icon">👍</span>
+                        <span class="effect-name">Thumbs Up</span>
+                    </button>
+                    <button class="effect-btn" data-action="applause" data-category="visual">
+                        <span class="effect-icon">👏</span>
+                        <span class="effect-name">Applause</span>
+                    </button>
+                    <button class="effect-btn" data-action="question" data-category="visual">
+                        <span class="effect-icon">❓</span>
+                        <span class="effect-name">Question</span>
+                    </button>
+                    <button class="effect-btn" data-action="lightbulb" data-category="visual">
+                        <span class="effect-icon">💡</span>
+                        <span class="effect-name">Got It!</span>
+                    </button>
+                    <button class="effect-btn" data-action="heart" data-category="visual">
+                        <span class="effect-icon">❤️</span>
+                        <span class="effect-name">Love It</span>
+                    </button>
+                    <button class="effect-btn" data-action="mindblown" data-category="visual">
+                        <span class="effect-icon">🤯</span>
+                        <span class="effect-name">Mind Blown</span>
+                    </button>
+                    <button class="effect-btn" data-action="slowdown" data-category="visual">
+                        <span class="effect-icon">🐢</span>
+                        <span class="effect-name">Slow Down</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Reactions Section -->
+            <section class="control-section">
+                <h2>
+                    <span class="section-icon">😊</span>
+                    Quick Reactions
+                </h2>
+                <div class="button-grid reactions-grid" id="reactions">
+                    <button class="effect-btn reaction-btn" data-action="laugh" data-category="reaction">
+                        <span class="effect-icon">😂</span>
+                    </button>
+                    <button class="effect-btn reaction-btn" data-action="wow" data-category="reaction">
+                        <span class="effect-icon">😮</span>
+                    </button>
+                    <button class="effect-btn reaction-btn" data-action="thinking" data-category="reaction">
+                        <span class="effect-icon">🤔</span>
+                    </button>
+                    <button class="effect-btn reaction-btn" data-action="fire" data-category="reaction">
+                        <span class="effect-icon">🔥</span>
+                    </button>
+                    <button class="effect-btn reaction-btn" data-action="star" data-category="reaction">
+                        <span class="effect-icon">⭐</span>
+                    </button>
+                    <button class="effect-btn reaction-btn" data-action="rocket" data-category="reaction">
+                        <span class="effect-icon">🚀</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Sound Effects Section (Future VoiceMod) -->
+            <section class="control-section">
+                <h2>
+                    <span class="section-icon">🔊</span>
+                    Sound Effects
+                    <span class="coming-soon-badge">Preview</span>
+                </h2>
+                <div class="button-grid" id="sound-effects">
+                    <button class="effect-btn" data-action="ding" data-category="sound">
+                        <span class="effect-icon">🔔</span>
+                        <span class="effect-name">Ding</span>
+                    </button>
+                    <button class="effect-btn" data-action="drumroll" data-category="sound">
+                        <span class="effect-icon">🥁</span>
+                        <span class="effect-name">Drum Roll</span>
+                    </button>
+                    <button class="effect-btn" data-action="airhorn" data-category="sound">
+                        <span class="effect-icon">📯</span>
+                        <span class="effect-name">Air Horn</span>
+                    </button>
+                    <button class="effect-btn" data-action="crickets" data-category="sound">
+                        <span class="effect-icon">🦗</span>
+                        <span class="effect-name">Crickets</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Poll Section -->
+            <section class="control-section">
+                <h2>
+                    <span class="section-icon">📊</span>
+                    Quick Poll Response
+                </h2>
+                <div class="button-grid poll-grid" id="poll-buttons">
+                    <button class="effect-btn poll-btn" data-action="poll_a" data-category="poll">
+                        <span class="effect-icon">🅰️</span>
+                        <span class="effect-name">A</span>
+                    </button>
+                    <button class="effect-btn poll-btn" data-action="poll_b" data-category="poll">
+                        <span class="effect-icon">🅱️</span>
+                        <span class="effect-name">B</span>
+                    </button>
+                    <button class="effect-btn poll-btn" data-action="poll_c" data-category="poll">
+                        <span class="effect-icon">©️</span>
+                        <span class="effect-name">C</span>
+                    </button>
+                    <button class="effect-btn poll-btn" data-action="poll_d" data-category="poll">
+                        <span class="effect-icon">🇩</span>
+                        <span class="effect-name">D</span>
+                    </button>
+                    <button class="effect-btn poll-btn yes-btn" data-action="poll_yes" data-category="poll">
+                        <span class="effect-icon">✅</span>
+                        <span class="effect-name">Yes</span>
+                    </button>
+                    <button class="effect-btn poll-btn no-btn" data-action="poll_no" data-category="poll">
+                        <span class="effect-icon">❌</span>
+                        <span class="effect-name">No</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="panel-footer">
+            <p>Be respectful and use effects appropriately! 📚</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Include Supabase JS from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

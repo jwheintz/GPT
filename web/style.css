@@ -1,0 +1,556 @@
+/* CSS Variables */
+:root {
+    --primary-color: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: #e0e7ff;
+    --secondary-color: #64748b;
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --background-color: #f8fafc;
+    --card-background: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --transition: all 0.2s ease;
+}
+
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Password Gate */
+.gate-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.gate-container {
+    background: var(--card-background);
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+.gate-header {
+    margin-bottom: 30px;
+}
+
+.gate-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.gate-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.gate-header p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+#password-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#password-input {
+    padding: 14px 18px;
+    font-size: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    outline: none;
+    transition: var(--transition);
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+#password-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.btn-primary {
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-secondary:hover {
+    background: var(--background-color);
+    color: var(--text-primary);
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.error-text {
+    color: var(--danger-color);
+    font-size: 14px;
+    margin-top: 8px;
+    min-height: 20px;
+}
+
+/* Main Control Panel */
+#control-panel {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.panel-header {
+    background: var(--card-background);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-left .logo {
+    font-size: 28px;
+}
+
+.header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Connection Status */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.online {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-indicator.online .status-dot {
+    background: var(--success-color);
+}
+
+.status-indicator.offline {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-indicator.offline .status-dot {
+    background: var(--danger-color);
+}
+
+.status-indicator.connecting {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-indicator.connecting .status-dot {
+    background: var(--warning-color);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Paused Banner */
+.paused-banner {
+    background: linear-gradient(90deg, #fef3c7, #fde68a);
+    color: #92400e;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.pause-icon {
+    font-size: 18px;
+}
+
+/* Cooldown Display */
+.cooldown-display {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    padding: 10px 24px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+#cooldown-timer {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* Main Content */
+.panel-content {
+    flex: 1;
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Control Sections */
+.control-section {
+    background: var(--card-background);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.control-section h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-icon {
+    font-size: 20px;
+}
+
+.coming-soon-badge {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--primary-light);
+    color: var(--primary-color);
+    padding: 3px 8px;
+    border-radius: 10px;
+    margin-left: auto;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Button Grid */
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+}
+
+.reactions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+}
+
+.poll-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Effect Buttons */
+.effect-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+    background: var(--background-color);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    min-height: 80px;
+}
+
+.effect-btn:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.effect-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.effect-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.effect-btn.clicked {
+    animation: buttonPop 0.3s ease;
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+}
+
+@keyframes buttonPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+.effect-icon {
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+.effect-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Reaction Buttons */
+.reaction-btn {
+    min-height: 60px;
+    padding: 12px;
+}
+
+.reaction-btn .effect-icon {
+    font-size: 32px;
+    margin-bottom: 0;
+}
+
+/* Poll Buttons */
+.poll-btn {
+    min-height: 70px;
+}
+
+.poll-btn.yes-btn:hover:not(:disabled) {
+    border-color: var(--success-color);
+    background: #dcfce7;
+}
+
+.poll-btn.no-btn:hover:not(:disabled) {
+    border-color: var(--danger-color);
+    background: #fee2e2;
+}
+
+/* Footer */
+.panel-footer {
+    background: var(--card-background);
+    border-top: 1px solid var(--border-color);
+    padding: 16px 24px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--text-primary);
+    color: white;
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.success {
+    background: var(--success-color);
+}
+
+.toast.error {
+    background: var(--danger-color);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .gate-container {
+        padding: 30px 24px;
+    }
+    
+    .panel-header {
+        padding: 12px 16px;
+    }
+    
+    .header-left h1 {
+        font-size: 16px;
+    }
+    
+    .panel-content {
+        padding: 16px;
+    }
+    
+    .control-section {
+        padding: 16px;
+    }
+    
+    .button-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 8px;
+    }
+    
+    .effect-btn {
+        padding: 12px 8px;
+        min-height: 70px;
+    }
+    
+    .effect-icon {
+        font-size: 24px;
+    }
+    
+    .effect-name {
+        font-size: 11px;
+    }
+    
+    .poll-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .status-indicator {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+    
+    .status-indicator .status-text {
+        display: none;
+    }
+}
+
+/* Dark Mode Support (optional, respects system preference) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #0f172a;
+        --card-background: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --primary-light: #312e81;
+    }
+    
+    .gate-overlay {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    }
+    
+    #password-input {
+        background: var(--card-background);
+        color: var(--text-primary);
+    }
+    
+    .status-indicator.online {
+        background: #14532d;
+        color: #86efac;
+    }
+    
+    .status-indicator.offline {
+        background: #7f1d1d;
+        color: #fca5a5;
+    }
+    
+    .status-indicator.connecting {
+        background: #78350f;
+        color: #fcd34d;
+    }
+    
+    .paused-banner {
+        background: linear-gradient(90deg, #78350f, #92400e);
+        color: #fcd34d;
+    }
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * { margin: 0; padding: 0; }
+        body { 
+            background: transparent; 
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .emoji {
+            font-size: 200px;
+            animation: popIn 0.5s ease-out forwards, float 2s ease-in-out infinite 0.5s;
+            opacity: 0;
+            transform: scale(0);
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0) rotate(-20deg); }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="emoji" id="emoji">👍</div>
+    <script>
+        // Get emoji from URL parameter: ?emoji=🎉
+        const params = new URLSearchParams(window.location.search);
+        const emoji = params.get('emoji') || '👍';
+        document.getElementById('emoji').textContent = emoji;
+    </script>
+</body>
+</html>
