@@ -1,15 +1,18 @@
-# GPT
+# Proficient Programming Languages
 
 Short description
-- Replace this one-liner with a concise description of what this repository provides.
+- A repository listing programming languages the AI is proficient in.
 
 Status
-- TODO: update this with project status (alpha / beta / production), supported languages, and a short roadmap.
+- Project status: Active
+- Supported languages: See [PROFICIENT_LANGUAGES.md](PROFICIENT_LANGUAGES.md)
+- Roadmap: Expand list with code examples for each language.
 
 Quick links
 - Getting started: docs/GETTING_STARTED.md
 - Contributing: CONTRIBUTING.md
 - Issues: https://github.com/jwheintz/GPT/issues
+- Full Language List: [PROFICIENT_LANGUAGES.md](PROFICIENT_LANGUAGES.md)
 
 Quickstart (generic)
 1. Prerequisites
@@ -81,9 +84,3 @@ curl http://localhost:8080/health
   - OS/version
   - Steps to reproduce
   - Logs or error output
-
-What to update in this README
-- Replace the one-line description and project status
-- Add exact prerequisites and commands
-- Add environment variables / API keys required
-- Add maintainers and contact info or whatever
