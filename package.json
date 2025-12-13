@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node test-connection.js"
   },
   "keywords": ["obs", "education", "streaming", "classroom"],
   "author": "",

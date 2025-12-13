@@ -36,6 +36,17 @@ Open **`QUICK_START.md`** - it walks you through:
 
 **→ [Open QUICK_START.md](QUICK_START.md) now!**
 
+### 🧪 Want to Test First?
+
+Open **`TESTING_GUIDE.md`** for complete testing instructions:
+- Test OBS connection
+- Test web interface
+- Test from phone/tablet
+- Test with ngrok
+- Troubleshoot common issues
+
+**→ [Open TESTING_GUIDE.md](TESTING_GUIDE.md)**
+
 ### 2️⃣ Customize for Your Class
 
 Edit **`public/index.html`** to match your OBS setup:

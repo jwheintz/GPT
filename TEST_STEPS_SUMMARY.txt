@@ -1,0 +1,205 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║                     QUICK TESTING STEPS                               ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+BEFORE YOU START:
+  • OBS Studio is installed and running
+  • Node.js is installed
+  • You're in the project folder
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: CONFIGURE OBS (2 minutes)
+
+  1. Open OBS Studio
+  2. Go to: Tools → WebSocket Server Settings
+  3. Check: "Enable WebSocket server"
+  4. Set password: test123
+  5. Click OK
+  
+  6. Add a test filter:
+     • Right-click your Camera source
+     • Click "Filters"
+     • Click + → Color Correction
+     • Name it: Color Correction
+     • Click Close
+
+  ✓ Done? OBS is configured!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 2: INSTALL & CONFIGURE (3 minutes)
+
+  In Command Prompt:
+
+  npm install
+  copy .env.example .env
+  notepad .env
+
+  In the .env file, change:
+  OBS_PASSWORD=test123
+
+  Save and close.
+
+  ✓ Done? Project is configured!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 3: TEST CONNECTION (1 minute)
+
+  Run the test script:
+
+  npm test
+
+  OR double-click: test-server.bat
+
+  Expected output:
+    ✅ SUCCESS! Connected to OBS WebSocket
+    OBS Information: ...
+    Available Scenes: ...
+
+  ✓ Done? OBS connection works!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 4: START SERVER (1 minute)
+
+  npm start
+
+  OR double-click: start-server.bat
+
+  Expected output:
+    Server running on port 3000
+    ✓ Connected to OBS WebSocket
+
+  ✓ Done? Server is running!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 5: TEST WEB INTERFACE (2 minutes)
+
+  1. Open browser: http://localhost:3000
+  2. Login as Student
+  3. Password: student123
+  4. Click "Enter Classroom"
+  
+  Expected:
+    • Control panel appears
+    • Green status dots (OBS and Server)
+    • Buttons are visible
+
+  5. Click the "Color Effect" button (🎨)
+  
+  Expected:
+    • Activity feed shows: "Color Correction enabled"
+    • In OBS, check your Camera filters - should toggle!
+
+  6. Click it again - should toggle off
+
+  ✓ Done? Web interface works!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 6: TEST KILL SWITCH (2 minutes)
+
+  1. Open new browser window (incognito/private mode)
+  2. Go to: http://localhost:3000/teacher-panel.html
+  3. Enter password: teacher123
+  
+  4. Toggle the BIG KILL SWITCH to ON (red)
+  
+  5. Back in student window, try clicking a button
+  
+  Expected:
+    • Warning banner: "Controls are currently disabled"
+    • Buttons are grayed out
+    • Can't trigger effects
+
+  6. Toggle kill switch OFF (green)
+  7. Student buttons work again
+
+  ✓ Done? Kill switch works!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 7: TEST FROM PHONE (5 minutes)
+
+  1. Find your computer's IP address:
+     ipconfig
+     
+     Look for: IPv4 Address: 192.168.1.XXX
+  
+  2. On your phone (same WiFi), open browser
+  3. Go to: http://192.168.1.XXX:3000
+  4. Login as student
+  5. Click a button
+  
+  Expected:
+    • Page loads on phone
+    • Buttons work
+    • Effect triggers in OBS
+
+  ✓ Done? Mobile access works!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 8 (OPTIONAL): TEST PUBLIC ACCESS (10 minutes)
+
+  1. Download ngrok: https://ngrok.com/download
+  2. Extract ngrok.exe to project folder
+  3. Run: ngrok http 3000
+  
+  4. Copy the HTTPS URL (e.g., https://abc123.ngrok.io)
+  
+  5. On phone (using cellular data, NOT WiFi):
+     • Open that URL
+     • Login as student
+     • Click buttons
+  
+  Expected:
+    • Works from anywhere!
+    • This is what you'll share with students
+
+  ✓ Done? Public access works!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ ALL TESTS PASSED?
+
+You're ready to customize and use with students!
+
+NEXT STEPS:
+  1. Read CUSTOMIZATION.md to add your own buttons
+  2. Read SETUP_GUIDE.md to change passwords
+  3. Add more filters in OBS
+  4. Customize the interface
+  5. Test with a friend/colleague first
+  6. Go live with students!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ SOMETHING NOT WORKING?
+
+See TESTING_GUIDE.md for detailed troubleshooting!
+
+Common issues:
+  • OBS not connected → Check WebSocket is enabled in OBS
+  • Button doesn't work → Check filter names match exactly
+  • Can't connect from phone → Check Windows Firewall
+  • Password fails → Use student123 or teacher123
+
+Full troubleshooting in TESTING_GUIDE.md and FAQ.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 READY TO TRANSFORM YOUR CLASSROOM!
+
+Questions? Check the documentation!
+  • TESTING_GUIDE.md - Complete testing guide
+  • QUICK_START.md - Fast setup
+  • FAQ.md - Common questions
+  • SETUP_GUIDE.md - Detailed setup
+
+Happy teaching! 🎓
