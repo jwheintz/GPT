@@ -137,12 +137,13 @@ class PluginInstaller:
         
         return plugin_files
     
-    def create_initial_backups(self, plugins: List[Dict]) -> Dict[str, bool]:
+    def create_initial_backups(self, plugins: List[Dict], database=None) -> Dict[str, bool]:
         """
         Create initial backups of existing plugins (first scan).
         
         Args:
             plugins: List of detected plugins from scanner
+            database: Optional database instance to record archives
             
         Returns:
             Dict mapping plugin names to backup success status
@@ -183,14 +184,39 @@ class PluginInstaller:
                 
                 # Create archive with "initial" version tag
                 version = plugin.get('version', 'unknown')
+                archive_version = f"{version}_initial"
                 archive_path = self.create_archive(
                     plugin_name=plugin['name'],
-                    version=f"{version}_initial",
+                    version=archive_version,
                     files=files_to_backup
                 )
                 
                 if archive_path:
                     logger.info(f"Created initial backup for {plugin['name']} v{version}")
+                    
+                    # Record in database if provided
+                    if database:
+                        try:
+                            # Calculate file count and size
+                            file_count = len(files_to_backup)
+                            total_size = sum(
+                                f.stat().st_size if f.is_file() else 
+                                sum(sf.stat().st_size for sf in f.rglob("*") if sf.is_file())
+                                for f in files_to_backup if f.exists()
+                            )
+                            
+                            # Insert archive record
+                            database.cursor.execute("""
+                                INSERT INTO plugin_archives 
+                                (plugin_name, version, archive_path, archived_date, file_count, total_size)
+                                VALUES (?, ?, ?, datetime('now'), ?, ?)
+                            """, (plugin['name'], archive_version, str(archive_path), file_count, total_size))
+                            database.conn.commit()
+                            
+                            logger.info(f"Recorded archive in database for {plugin['name']}")
+                        except Exception as db_error:
+                            logger.error(f"Failed to record archive in database: {db_error}")
+                    
                     results[plugin['name']] = True
                 else:
                     logger.warning(f"Failed to create initial backup for {plugin['name']}")

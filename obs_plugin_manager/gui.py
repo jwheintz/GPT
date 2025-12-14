@@ -540,7 +540,8 @@ class OBSPluginManagerGUI:
                 self.root.after(0, lambda: self.set_status(f"Creating initial backups of {len(plugins)} plugins..."))
                 
                 try:
-                    results = self.plugin_installer.create_initial_backups(plugins)
+                    # Pass database to record archives
+                    results = self.plugin_installer.create_initial_backups(plugins, self.database)
                     success_count = sum(1 for v in results.values() if v)
                     
                     # Mark initial backups as stable (they're the known-good versions)
