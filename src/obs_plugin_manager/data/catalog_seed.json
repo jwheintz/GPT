@@ -1,0 +1,58 @@
+[
+  {
+    "plugin_id": "obs-websocket",
+    "name": "obs-websocket",
+    "description": "WebSocket server for OBS Studio (popular integration plugin).",
+    "homepage": "https://github.com/obsproject/obs-websocket",
+    "suggested": true,
+    "primary_dll": "obs-websocket.dll",
+    "default_scope": "global",
+    "provider": {
+      "type": "github_release",
+      "repo": "obsproject/obs-websocket",
+      "asset_regex": "(?i)windows.*\\.(zip|7z)$"
+    }
+  },
+  {
+    "plugin_id": "streamfx",
+    "name": "StreamFX",
+    "description": "A popular collection of OBS filters/effects.",
+    "homepage": "https://github.com/Xaymar/obs-StreamFX",
+    "suggested": true,
+    "primary_dll": "StreamFX.dll",
+    "default_scope": "global",
+    "provider": {
+      "type": "github_release",
+      "repo": "Xaymar/obs-StreamFX",
+      "asset_regex": "(?i)windows.*\\.(zip|7z)$"
+    }
+  },
+  {
+    "plugin_id": "source-record",
+    "name": "Source Record",
+    "description": "Record individual sources to separate files.",
+    "homepage": "https://github.com/exeldro/obs-source-record",
+    "suggested": true,
+    "primary_dll": "source-record.dll",
+    "default_scope": "global",
+    "provider": {
+      "type": "github_release",
+      "repo": "exeldro/obs-source-record",
+      "asset_regex": "(?i)windows.*\\.(zip|7z)$"
+    }
+  },
+  {
+    "plugin_id": "move-transition",
+    "name": "Move Transition",
+    "description": "Move sources between scenes with transitions.",
+    "homepage": "https://github.com/exeldro/obs-move-transition",
+    "suggested": false,
+    "primary_dll": "move-transition.dll",
+    "default_scope": "global",
+    "provider": {
+      "type": "github_release",
+      "repo": "exeldro/obs-move-transition",
+      "asset_regex": "(?i)windows.*\\.(zip|7z)$"
+    }
+  }
+]

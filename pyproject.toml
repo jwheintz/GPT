@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obs-plugin-manager"
+version = "0.1.0"
+description = "Windows-based OBS plugin management (file-based; no OBS integration)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "" }]
+dependencies = [
+  "click>=8.1.7",
+  "requests>=2.32.3",
+  "packaging>=24.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2.0",
+  "ruff>=0.6.9",
+]
+
+[project.scripts]
+obs-plugin-manager = "obs_plugin_manager.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+obs_plugin_manager = ["data/*.json"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]

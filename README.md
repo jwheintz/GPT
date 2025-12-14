@@ -1,89 +1,59 @@
-# GPT
+# OBS Plugin Manager (Windows, file-based)
 
-Short description
-- Replace this one-liner with a concise description of what this repository provides.
+This repository provides a **Windows-based OBS Plugin Management solution** that **does not integrate with OBS** (no OBS API usage). Instead it:
 
-Status
-- TODO: update this with project status (alpha / beta / production), supported languages, and a short roadmap.
+- **Maintains a local catalog** of popular plugins (seeded JSON + SQLite database)
+- **Refreshes the catalog** by querying online sources (currently GitHub Releases)
+- **Scans your OBS install + user plugin folders** to detect what plugins you have
+- **Compares installed vs latest** and reports available updates
+- **Downloads and installs updates** (only via filesystem operations)
+- **Never writes to OBS plugin folders while OBS is running**
+  - It can **detect** OBS running, and can **kill OBS** if you allow it
+- **Archives the last two versions** before overwrite so you can **rollback**
 
-Quick links
-- Getting started: docs/GETTING_STARTED.md
-- Contributing: CONTRIBUTING.md
-- Issues: https://github.com/jwheintz/GPT/issues
+## Quickstart (Windows)
 
-Quickstart (generic)
-1. Prerequisites
-   - Git >= 2.20
-   - Node.js (if applicable): node >= 16 and npm or yarn
-   - Python (if applicable): python >= 3.8 and pip
-   - Go (if applicable): go >= 1.18
-   - Docker (optional): docker >= 20.x
+Prereqs: **Python 3.10+**
 
-2. Clone the repo
-```bash
-git clone https://github.com/jwheintz/GPT.git
-cd GPT
-```
-
-3. Identify language / build system
-- package.json → Node.js / TypeScript
-- pyproject.toml, requirements.txt or setup.py → Python
-- go.mod → Go
-- Cargo.toml → Rust
-- Dockerfile → containerized app
-
-4. Common install / run commands (pick the block matching this repo)
-- Node.js
-```bash
-npm ci
-npm run build    # if present
-npm start        # or `npm run dev`
-npm test
-```
-- Python (venv)
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python -m pytest
-```
-- Go
-```bash
-go mod download
-go build ./...
-go test ./...
-```
-- Docker
-```bash
-docker build -t gpt-app .
-docker run -p 8080:8080 --env-file .env gpt-app
+.venv\Scripts\activate
+pip install -e ".[dev]"
+
+# seed local catalog
+obs-plugin-manager catalog seed
+
+# fetch latest versions/download URLs
+obs-plugin-manager catalog refresh
+
+# (optional) merge additional plugin definitions (JSON list) from file or URL
+obs-plugin-manager catalog import plugins.json
+obs-plugin-manager catalog import https://example.com/obs-plugin-catalog.json
+
+# show detected OBS paths + running state
+obs-plugin-manager status
+
+# scan installed plugins
+obs-plugin-manager scan
+
+# show updates available
+obs-plugin-manager updates
+
+# download a plugin package to cache (no install)
+obs-plugin-manager download obs-websocket
+
+# install/update one plugin (will refuse if OBS is running unless you allow kill)
+obs-plugin-manager install obs-websocket --allow-kill-obs
+
+# rollback using archived backups (1 = most recent)
+obs-plugin-manager rollback obs-websocket --index 1 --allow-kill-obs
 ```
 
-5. Run tests
-- Look for tests/ or __tests__/ or a Makefile target `test` and run accordingly:
-```bash
-npm test
-pytest
-go test ./...
-make test
-```
+Notes:
+- If OBS isn’t in the default install location, pass `--obs-root "C:\\Program Files\\obs-studio"` (or your path).
+- The tool stores its state (catalog, downloads, archives) under `%USERPROFILE%\\.obs_plugin_manager` by default.
 
-6. Example usage
-- Replace the example below with repo-specific instructions:
-```bash
-# Start the app, then check health
-npm start
-curl http://localhost:8080/health
-```
+## Links
 
-7. Need help?
-- Open an issue at https://github.com/jwheintz/GPT/issues and include:
-  - OS/version
-  - Steps to reproduce
-  - Logs or error output
-
-What to update in this README
-- Replace the one-line description and project status
-- Add exact prerequisites and commands
-- Add environment variables / API keys required
-- Add maintainers and contact info or whatever
+- Getting started: `GETTING_STARTED.md`
+- Contributing: `CONTRIBUTING.md`
