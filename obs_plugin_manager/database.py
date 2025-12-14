@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
+from .logger import get_logger
 
 
 class PluginDatabase:
@@ -14,17 +15,24 @@ class PluginDatabase:
     
     def __init__(self, db_path: str = "obs_plugins.db"):
         """Initialize the database connection."""
+        self.logger = get_logger(__name__)
         self.db_path = Path(db_path)
         self.conn = None
         self.cursor = None
         self._connect()
         self._create_tables()
+        self.logger.info(f"Database initialized: {db_path}")
     
     def _connect(self):
         """Establish database connection."""
-        self.conn = sqlite3.connect(self.db_path)
-        self.conn.row_factory = sqlite3.Row
-        self.cursor = self.conn.cursor()
+        try:
+            self.conn = sqlite3.connect(self.db_path)
+            self.conn.row_factory = sqlite3.Row
+            self.cursor = self.conn.cursor()
+            self.logger.debug(f"Database connection established: {self.db_path}")
+        except sqlite3.Error as e:
+            self.logger.error(f"Failed to connect to database: {e}")
+            raise
     
     def _create_tables(self):
         """Create necessary database tables if they don't exist."""

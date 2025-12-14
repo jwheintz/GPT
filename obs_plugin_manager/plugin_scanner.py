@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 from typing import List, Dict, Optional
 import hashlib
+from .logger import get_logger
 
 
 class PluginScanner:
@@ -30,8 +31,10 @@ class PluginScanner:
         Args:
             plugin_dirs: List of directories to scan for plugins
         """
+        self.logger = get_logger(__name__)
         self.plugin_dirs = plugin_dirs
         self.scanned_plugins = []
+        self.logger.info(f"Plugin scanner initialized with {len(plugin_dirs)} directories")
     
     def scan_plugins(self) -> List[Dict]:
         """
@@ -62,6 +65,7 @@ class PluginScanner:
         
         # Remove duplicates (same plugin in multiple locations)
         self.scanned_plugins = self._deduplicate_plugins(self.scanned_plugins)
+        self.logger.info(f"Scan complete: found {len(self.scanned_plugins)} plugins")
         
         return self.scanned_plugins
     

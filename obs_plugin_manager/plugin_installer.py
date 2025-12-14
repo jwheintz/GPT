@@ -10,6 +10,7 @@ import requests
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple, Callable
 from datetime import datetime
+from .logger import get_logger
 
 
 class PluginInstaller:
@@ -23,12 +24,14 @@ class PluginInstaller:
             plugin_dirs: List of OBS plugin directories
             archive_dir: Directory to store plugin archives
         """
+        self.logger = get_logger(__name__)
         self.plugin_dirs = plugin_dirs
         self.primary_plugin_dir = plugin_dirs[0] if plugin_dirs else None
         self.archive_dir = Path(archive_dir)
         self.archive_dir.mkdir(exist_ok=True)
         self.download_dir = Path(tempfile.gettempdir()) / "obs_plugin_downloads"
         self.download_dir.mkdir(exist_ok=True)
+        self.logger.info(f"Plugin installer initialized with {len(plugin_dirs)} directories")
     
     def download_plugin(self, url: str, plugin_name: str,
                        progress_callback: Optional[Callable[[int, int], None]] = None) -> Optional[Path]:
@@ -67,9 +70,13 @@ class PluginInstaller:
                         if progress_callback:
                             progress_callback(downloaded, total_size)
             
+            self.logger.info(f"Downloaded {plugin_name} ({downloaded} bytes)")
             return download_path
+        except requests.RequestException as e:
+            self.logger.error(f"Network error downloading {plugin_name}: {e}")
+            return None
         except Exception as e:
-            print(f"Error downloading plugin: {e}")
+            self.logger.exception(f"Unexpected error downloading {plugin_name}: {e}")
             return None
     
     def extract_plugin(self, archive_path: Path, extract_dir: Optional[Path] = None) -> Optional[Path]:
