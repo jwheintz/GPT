@@ -10,13 +10,13 @@ from pathlib import Path
 from typing import Optional, List, Dict
 from datetime import datetime
 
-from obs_manager import OBSManager
-from plugin_scanner import PluginScanner
-from plugin_repository import PluginRepository
-from plugin_installer import PluginInstaller
-from database import PluginDatabase
-from local_repository import LocalRepository
-from discovery import PluginDiscovery
+from .obs_manager import OBSManager
+from .plugin_scanner import PluginScanner
+from .plugin_repository import PluginRepository
+from .plugin_installer import PluginInstaller
+from .database import PluginDatabase
+from .local_repository import LocalRepository
+from .discovery import PluginDiscovery
 
 
 class OBSPluginManagerGUI:

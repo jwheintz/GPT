@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 import re
-from obs_resources import OBSResourcesFetcher
+from .obs_resources import OBSResourcesFetcher
 
 
 class PluginDiscovery:
