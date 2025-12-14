@@ -118,7 +118,11 @@ class OBSPluginManagerGUI:
         
         ttk.Button(toolbar, text="Refresh", command=self._scan_plugins).pack(side=tk.LEFT, padx=2)
         ttk.Button(toolbar, text="Remove", command=self._remove_selected_plugin).pack(side=tk.LEFT, padx=2)
-        ttk.Button(toolbar, text="Rollback", command=self._rollback_plugin).pack(side=tk.LEFT, padx=2)
+        ttk.Separator(toolbar, orient=tk.VERTICAL).pack(side=tk.LEFT, padx=5, fill=tk.Y)
+        ttk.Button(toolbar, text="⭐ Mark Stable", command=self._mark_current_as_stable).pack(side=tk.LEFT, padx=2)
+        ttk.Button(toolbar, text="↩️ Rollback to Stable", command=self._rollback_to_stable).pack(side=tk.LEFT, padx=2)
+        ttk.Separator(toolbar, orient=tk.VERTICAL).pack(side=tk.LEFT, padx=5, fill=tk.Y)
+        ttk.Button(toolbar, text="Manage Versions", command=self._manage_versions).pack(side=tk.LEFT, padx=2)
         
         # Plugin list
         list_frame = ttk.Frame(frame)
@@ -538,8 +542,19 @@ class OBSPluginManagerGUI:
                 try:
                     results = self.plugin_installer.create_initial_backups(plugins)
                     success_count = sum(1 for v in results.values() if v)
+                    
+                    # Mark initial backups as stable (they're the known-good versions)
+                    for plugin in plugins:
+                        if results.get(plugin['name'], False):
+                            # Find the initial backup version
+                            archives = self.database.get_all_versions(plugin['name'])
+                            for archive in archives:
+                                if 'initial' in archive['version']:
+                                    self.database.mark_version_as_stable(plugin['name'], archive['version'])
+                                    break
+                    
                     self.root.after(0, lambda: self.set_status(
-                        f"Initial backups: {success_count}/{len(plugins)} successful"
+                        f"Initial backups: {success_count}/{len(plugins)} successful (marked as STABLE)"
                     ))
                 except Exception as e:
                     self.root.after(0, lambda: self.set_status(f"Backup creation failed: {str(e)}"))
@@ -909,6 +924,207 @@ class OBSPluginManagerGUI:
     def _update_all_plugins(self):
         """Update all plugins with available updates."""
         messagebox.showinfo("Update All", "This feature will update all plugins with available updates.")
+    
+    def _mark_current_as_stable(self):
+        """Mark the currently installed version as stable."""
+        selection = self.installed_tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a plugin to mark as stable.")
+            return
+        
+        item = self.installed_tree.item(selection[0])
+        plugin_name = item['values'][0]
+        current_version = item['values'][1]
+        
+        # Confirm with user
+        result = messagebox.askyesno(
+            "Mark as Stable",
+            f"Mark {plugin_name} v{current_version} as STABLE?\n\n"
+            "This version will become your rollback target.\n"
+            "Any previous stable marking will be removed."
+        )
+        
+        if not result:
+            return
+        
+        # First, need to create an archive of current version if not exists
+        # Check if archive exists for current version
+        archives = self.database.get_all_versions(plugin_name)
+        current_archive = None
+        for archive in archives:
+            if current_version in archive['version']:
+                current_archive = archive
+                break
+        
+        if not current_archive:
+            # Need to create archive first
+            messagebox.showinfo(
+                "Creating Archive", 
+                f"Creating archive of current version before marking as stable..."
+            )
+            # This would need plugin file detection - for now, show message
+            messagebox.showwarning(
+                "Manual Archive Needed",
+                "Please update or reinstall this plugin first to create an archive,\n"
+                "then mark it as stable."
+            )
+            return
+        
+        # Mark as stable in database
+        success = self.database.mark_version_as_stable(plugin_name, current_archive['version'])
+        
+        if success:
+            messagebox.showinfo(
+                "Success",
+                f"✅ {plugin_name} v{current_version} is now marked as STABLE!\n\n"
+                "Use 'Rollback to Stable' to restore this version anytime."
+            )
+            self._scan_plugins()  # Refresh to show stable marker
+        else:
+            messagebox.showerror("Error", "Failed to mark version as stable.")
+    
+    def _rollback_to_stable(self):
+        """Rollback to the stable version."""
+        if self.obs_manager.is_obs_running():
+            messagebox.showerror("Error", "Cannot rollback while OBS is running. Please close OBS first.")
+            return
+        
+        if self.plugin_installer is None:
+            messagebox.showerror("Error", "Plugin installer not initialized.")
+            return
+        
+        selection = self.installed_tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a plugin to rollback to stable version.")
+            return
+        
+        item = self.installed_tree.item(selection[0])
+        plugin_name = item['values'][0]
+        
+        # Get stable version
+        stable_version = self.database.get_stable_version(plugin_name)
+        
+        if not stable_version:
+            messagebox.showwarning(
+                "No Stable Version",
+                f"No stable version marked for {plugin_name}.\n\n"
+                "Use 'Mark Stable' to mark a working version as stable first."
+            )
+            return
+        
+        # Confirm rollback
+        result = messagebox.askyesno(
+            "Rollback to Stable",
+            f"Rollback {plugin_name} to STABLE version?\n\n"
+            f"Stable Version: {stable_version['version']}\n"
+            f"Marked stable: {stable_version.get('marked_stable_date', 'Unknown')}\n\n"
+            "Current version will be replaced."
+        )
+        
+        if not result:
+            return
+        
+        # Perform rollback
+        def rollback_thread():
+            success, message = self.plugin_installer.rollback_to_stable(plugin_name, self.database)
+            
+            if success:
+                self.database.add_history_entry(
+                    plugin_name,
+                    "rollback_to_stable",
+                    stable_version['version'],
+                    success=True,
+                    notes="Restored to stable version"
+                )
+                self.root.after(0, lambda: messagebox.showinfo("Success", message))
+                self.root.after(0, self._scan_plugins)
+            else:
+                self.root.after(0, lambda: messagebox.showerror("Error", message))
+        
+        threading.Thread(target=rollback_thread, daemon=True).start()
+    
+    def _manage_versions(self):
+        """Show version management dialog."""
+        selection = self.installed_tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a plugin to manage versions.")
+            return
+        
+        item = self.installed_tree.item(selection[0])
+        plugin_name = item['values'][0]
+        
+        # Get all versions
+        versions = self.database.get_all_versions(plugin_name)
+        
+        if not versions:
+            messagebox.showinfo("No Versions", f"No archived versions found for {plugin_name}.")
+            return
+        
+        # Create dialog
+        dialog = tk.Toplevel(self.root)
+        dialog.title(f"Version Management - {plugin_name}")
+        dialog.geometry("700x400")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        ttk.Label(dialog, text=f"Manage versions for {plugin_name}", font=('Arial', 12, 'bold')).pack(pady=10)
+        
+        # Version list
+        list_frame = ttk.Frame(dialog)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        columns = ("version", "status", "date", "size")
+        tree = ttk.Treeview(list_frame, columns=columns, show="headings")
+        
+        tree.heading("version", text="Version")
+        tree.heading("status", text="Status")
+        tree.heading("date", text="Archived Date")
+        tree.heading("size", text="Size")
+        
+        tree.column("version", width=150)
+        tree.column("status", width=100)
+        tree.column("date", width=200)
+        tree.column("size", width=100)
+        
+        scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Populate versions
+        for version in versions:
+            status = "⭐ STABLE" if version.get('is_stable') else ""
+            size_mb = version.get('total_size', 0) / 1024 / 1024
+            tree.insert("", tk.END, values=(
+                version['version'],
+                status,
+                version.get('archived_date', 'Unknown'),
+                f"{size_mb:.1f} MB"
+            ))
+        
+        # Buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(pady=10)
+        
+        def mark_selected_stable():
+            sel = tree.selection()
+            if not sel:
+                messagebox.showwarning("No Selection", "Select a version to mark as stable.")
+                return
+            
+            selected_version = tree.item(sel[0])['values'][0]
+            success = self.database.mark_version_as_stable(plugin_name, selected_version)
+            
+            if success:
+                messagebox.showinfo("Success", f"Marked {selected_version} as STABLE!")
+                dialog.destroy()
+                self._manage_versions()  # Refresh
+            else:
+                messagebox.showerror("Error", "Failed to mark as stable.")
+        
+        ttk.Button(button_frame, text="⭐ Mark as Stable", command=mark_selected_stable).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Close", command=dialog.destroy).pack(side=tk.LEFT, padx=5)
     
     def _load_history(self):
         """Load installation history."""

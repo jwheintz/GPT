@@ -409,6 +409,42 @@ class PluginInstaller:
         except Exception as e:
             return False, f"Restore failed: {str(e)}"
     
+    def rollback_to_stable(self, plugin_name: str, database) -> Tuple[bool, str]:
+        """
+        Rollback to the last known stable version of a plugin.
+        
+        Args:
+            plugin_name: Name of the plugin
+            database: Database instance to query stable version
+            
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            # Get stable version from database
+            stable_version = database.get_stable_version(plugin_name)
+            
+            if not stable_version:
+                return False, f"No stable version marked for {plugin_name}. Mark a version as stable first."
+            
+            # Get archive path
+            archive_path = Path(stable_version['archive_path'])
+            
+            if not archive_path.exists():
+                return False, f"Stable version archive not found: {archive_path}"
+            
+            # Restore from stable archive
+            success, message = self.restore_from_archive(archive_path, plugin_name)
+            
+            if success:
+                return True, f"Restored to STABLE version {stable_version['version']}"
+            else:
+                return False, f"Failed to restore stable version: {message}"
+                
+        except Exception as e:
+            self.logger.error(f"Error rolling back to stable: {e}")
+            return False, f"Rollback to stable failed: {str(e)}"
+    
     def install_from_url(self, url: str, plugin_name: str,
                         progress_callback: Optional[Callable[[str, int], None]] = None) -> Tuple[bool, str]:
         """

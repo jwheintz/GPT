@@ -77,6 +77,8 @@ class PluginDatabase:
                 archived_date TIMESTAMP NOT NULL,
                 file_count INTEGER,
                 total_size INTEGER,
+                is_stable BOOLEAN DEFAULT 0,
+                marked_stable_date TIMESTAMP,
                 FOREIGN KEY (plugin_name) REFERENCES plugin_catalog(name)
             )
         """)
@@ -288,6 +290,118 @@ class PluginDatabase:
             """, (limit,))
         
         return [dict(row) for row in self.cursor.fetchall()]
+    
+    def mark_version_as_stable(self, plugin_name: str, version: str) -> bool:
+        """
+        Mark a specific version as stable (the known-good version).
+        Only one version can be stable at a time per plugin.
+        
+        Args:
+            plugin_name: Name of the plugin
+            version: Version to mark as stable
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # First, unmark any existing stable version for this plugin
+            self.cursor.execute("""
+                UPDATE plugin_archives 
+                SET is_stable = 0, marked_stable_date = NULL
+                WHERE plugin_name = ? AND is_stable = 1
+            """, (plugin_name,))
+            
+            # Mark the specified version as stable
+            self.cursor.execute("""
+                UPDATE plugin_archives 
+                SET is_stable = 1, marked_stable_date = datetime('now')
+                WHERE plugin_name = ? AND version = ?
+            """, (plugin_name, version))
+            
+            self.conn.commit()
+            
+            if self.cursor.rowcount > 0:
+                self.logger.info(f"Marked {plugin_name} v{version} as STABLE")
+                return True
+            else:
+                self.logger.warning(f"Could not mark {plugin_name} v{version} as stable (not found)")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error marking version as stable: {e}")
+            return False
+    
+    def get_stable_version(self, plugin_name: str) -> Optional[Dict]:
+        """
+        Get the stable version for a plugin.
+        
+        Args:
+            plugin_name: Name of the plugin
+            
+        Returns:
+            Dictionary with stable version info, or None if no stable version
+        """
+        try:
+            self.cursor.execute("""
+                SELECT * FROM plugin_archives 
+                WHERE plugin_name = ? AND is_stable = 1
+                LIMIT 1
+            """, (plugin_name,))
+            
+            row = self.cursor.fetchone()
+            return dict(row) if row else None
+            
+        except Exception as e:
+            self.logger.error(f"Error getting stable version: {e}")
+            return None
+    
+    def get_all_versions(self, plugin_name: str) -> List[Dict]:
+        """
+        Get all archived versions for a plugin.
+        
+        Args:
+            plugin_name: Name of the plugin
+            
+        Returns:
+            List of version dictionaries, ordered by date (newest first)
+        """
+        try:
+            self.cursor.execute("""
+                SELECT * FROM plugin_archives 
+                WHERE plugin_name = ?
+                ORDER BY archived_date DESC
+            """, (plugin_name,))
+            
+            return [dict(row) for row in self.cursor.fetchall()]
+            
+        except Exception as e:
+            self.logger.error(f"Error getting versions: {e}")
+            return []
+    
+    def unmark_stable_version(self, plugin_name: str) -> bool:
+        """
+        Remove stable marking from a plugin (no stable version).
+        
+        Args:
+            plugin_name: Name of the plugin
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            self.cursor.execute("""
+                UPDATE plugin_archives 
+                SET is_stable = 0, marked_stable_date = NULL
+                WHERE plugin_name = ? AND is_stable = 1
+            """, (plugin_name,))
+            
+            self.conn.commit()
+            self.logger.info(f"Unmarked stable version for {plugin_name}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error unmarking stable version: {e}")
+            return False
     
     def close(self):
         """Close the database connection."""
