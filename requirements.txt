@@ -1,0 +1,10 @@
+# OBS Plugin Manager Requirements
+# Python 3.8 or higher required
+
+# Core dependencies
+psutil>=5.9.0          # Process and system utilities
+requests>=2.31.0       # HTTP library for downloading plugins
+
+# Optional but recommended
+# For better Windows integration
+pywin32>=305; platform_system=="Windows"
