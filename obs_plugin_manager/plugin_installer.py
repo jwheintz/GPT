@@ -137,6 +137,71 @@ class PluginInstaller:
         
         return plugin_files
     
+    def create_initial_backups(self, plugins: List[Dict]) -> Dict[str, bool]:
+        """
+        Create initial backups of existing plugins (first scan).
+        
+        Args:
+            plugins: List of detected plugins from scanner
+            
+        Returns:
+            Dict mapping plugin names to backup success status
+        """
+        from .logger import get_logger
+        logger = get_logger(__name__)
+        
+        results = {}
+        
+        for plugin in plugins:
+            try:
+                # Get plugin path
+                plugin_path = Path(plugin.get('path', ''))
+                if not plugin_path.exists():
+                    results[plugin['name']] = False
+                    continue
+                
+                # Collect files to backup
+                files_to_backup = []
+                
+                if plugin_path.is_dir():
+                    # Backup entire directory
+                    files_to_backup = [plugin_path]
+                else:
+                    # Single file (DLL)
+                    files_to_backup = [plugin_path]
+                    
+                    # Look for associated data directories
+                    plugin_dir = plugin_path.parent
+                    plugin_base_name = plugin_path.stem
+                    potential_data_dir = plugin_dir / f"{plugin_base_name}_data"
+                    if potential_data_dir.exists() and potential_data_dir.is_dir():
+                        files_to_backup.append(potential_data_dir)
+                
+                if not files_to_backup:
+                    results[plugin['name']] = False
+                    continue
+                
+                # Create archive with "initial" version tag
+                version = plugin.get('version', 'unknown')
+                archive_path = self.create_archive(
+                    plugin_name=plugin['name'],
+                    version=f"{version}_initial",
+                    files=files_to_backup
+                )
+                
+                if archive_path:
+                    logger.info(f"Created initial backup for {plugin['name']} v{version}")
+                    results[plugin['name']] = True
+                else:
+                    logger.warning(f"Failed to create initial backup for {plugin['name']}")
+                    results[plugin['name']] = False
+                    
+            except Exception as e:
+                logger.error(f"Error creating initial backup for {plugin.get('name', 'unknown')}: {e}")
+                results[plugin.get('name', 'unknown')] = False
+        
+        return results
+    
     def create_archive(self, plugin_name: str, version: str, files: List[Path]) -> Optional[Path]:
         """
         Create an archive of plugin files for rollback.

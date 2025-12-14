@@ -519,6 +519,10 @@ class OBSPluginManagerGUI:
             plugins = self.plugin_scanner.scan_plugins()
             self.installed_plugins = plugins
             
+            # Check if this is first scan (for initial backups)
+            existing_records = self.database.get_installed_plugins()
+            is_first_scan = len(existing_records) == 0 and len(plugins) > 0
+            
             # Update database
             for plugin in plugins:
                 self.database.add_installed_plugin(
@@ -526,6 +530,19 @@ class OBSPluginManagerGUI:
                     plugin.get('version', 'Unknown'),
                     plugin['path']
                 )
+            
+            # Create initial backups on first scan (if plugin_installer available)
+            if is_first_scan and self.plugin_installer and plugins:
+                self.root.after(0, lambda: self.set_status(f"Creating initial backups of {len(plugins)} plugins..."))
+                
+                try:
+                    results = self.plugin_installer.create_initial_backups(plugins)
+                    success_count = sum(1 for v in results.values() if v)
+                    self.root.after(0, lambda: self.set_status(
+                        f"Initial backups: {success_count}/{len(plugins)} successful"
+                    ))
+                except Exception as e:
+                    self.root.after(0, lambda: self.set_status(f"Backup creation failed: {str(e)}"))
             
             self.root.after(0, self._update_installed_list)
             self.root.after(0, lambda: self.set_status(f"Found {len(plugins)} installed plugins"))
