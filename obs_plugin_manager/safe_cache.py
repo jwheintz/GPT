@@ -14,18 +14,23 @@ import time
 class ThreadSafeCache:
     """Thread-safe cache with file locking and expiration."""
     
-    def __init__(self, cache_file: Path, expiry: timedelta = timedelta(hours=6)):
+    def __init__(self, cache_file: Path, expiry: timedelta = timedelta(hours=6), 
+                 auto_save_threshold: int = 10):
         """
         Initialize thread-safe cache.
         
         Args:
             cache_file: Path to cache file
             expiry: Cache expiration time
+            auto_save_threshold: Number of operations before auto-save (0 = save every time)
         """
         self.cache_file = Path(cache_file)
         self.expiry = expiry
         self.lock = threading.Lock()
         self._cache = {}
+        self._dirty = False
+        self._operations_since_save = 0
+        self._auto_save_threshold = auto_save_threshold
         self._load_cache()
     
     def _load_cache(self):
@@ -42,10 +47,22 @@ class ThreadSafeCache:
                     self._cache = {}
             else:
                 self._cache = {}
+            
+            # Reset dirty flag after load
+            self._dirty = False
+            self._operations_since_save = 0
     
-    def _save_cache(self):
-        """Save cache to file (thread-safe)."""
+    def _save_cache(self, force: bool = False):
+        """
+        Save cache to file (thread-safe).
+        
+        Args:
+            force: Force save even if not dirty
+        """
         with self.lock:
+            if not force and not self._dirty:
+                return  # Nothing to save
+            
             try:
                 # Ensure parent directory exists
                 self.cache_file.parent.mkdir(parents=True, exist_ok=True)
@@ -57,6 +74,10 @@ class ThreadSafeCache:
                 
                 # Atomic rename
                 temp_file.replace(self.cache_file)
+                
+                # Reset dirty flag and counter
+                self._dirty = False
+                self._operations_since_save = 0
             except Exception as e:
                 from .logger import get_logger
                 logger = get_logger(__name__)
@@ -105,7 +126,15 @@ class ThreadSafeCache:
                 'value': value,
                 'cached_at': datetime.now().isoformat()
             }
-        self._save_cache()
+            self._dirty = True
+            self._operations_since_save += 1
+        
+        # Auto-save after threshold operations (batched writes)
+        if self._auto_save_threshold > 0 and self._operations_since_save >= self._auto_save_threshold:
+            self._save_cache()
+        elif self._auto_save_threshold == 0:
+            # Legacy behavior: save immediately
+            self._save_cache()
     
     def delete(self, key: str):
         """
@@ -117,13 +146,23 @@ class ThreadSafeCache:
         with self.lock:
             if key in self._cache:
                 del self._cache[key]
-        self._save_cache()
+                self._dirty = True
+                self._operations_since_save += 1
+        
+        # Auto-save after threshold operations (batched writes)
+        if self._auto_save_threshold > 0 and self._operations_since_save >= self._auto_save_threshold:
+            self._save_cache()
+        elif self._auto_save_threshold == 0:
+            # Legacy behavior: save immediately
+            self._save_cache()
     
     def clear(self):
         """Clear all cache entries."""
         with self.lock:
             self._cache = {}
-        self._save_cache()
+            self._dirty = True
+        # Always save immediately when clearing
+        self._save_cache(force=True)
     
     def is_valid(self, key: str) -> bool:
         """
@@ -188,11 +227,35 @@ class ThreadSafeCache:
             
             for key in expired_keys:
                 del self._cache[key]
+            
+            if expired_keys:
+                self._dirty = True
         
         if expired_keys:
             self._save_cache()
         
         return len(expired_keys)
+    
+    def flush(self):
+        """Force save cache to disk if dirty."""
+        if self._dirty:
+            self._save_cache(force=True)
+    
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensure cache is saved."""
+        self.flush()
+        return False
+    
+    def __del__(self):
+        """Cleanup - ensure cache is saved before deletion."""
+        try:
+            self.flush()
+        except Exception:
+            pass  # Suppress errors during cleanup
     
     def get_stats(self) -> Dict[str, Any]:
         """
@@ -211,7 +274,10 @@ class ThreadSafeCache:
                 'expired_entries': total_entries - valid_entries,
                 'expiry_hours': self.expiry.total_seconds() / 3600,
                 'cache_file': str(self.cache_file),
-                'file_size_bytes': self.cache_file.stat().st_size if self.cache_file.exists() else 0
+                'file_size_bytes': self.cache_file.stat().st_size if self.cache_file.exists() else 0,
+                'dirty': self._dirty,
+                'operations_since_save': self._operations_since_save,
+                'auto_save_threshold': self._auto_save_threshold
             }
 
 

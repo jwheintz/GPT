@@ -292,4 +292,28 @@ class PluginDatabase:
     def close(self):
         """Close the database connection."""
         if self.conn:
-            self.conn.close()
+            try:
+                self.conn.commit()  # Commit any pending changes
+                self.conn.close()
+                self.logger.debug(f"Database connection closed: {self.db_path}")
+            except Exception as e:
+                self.logger.error(f"Error closing database: {e}")
+            finally:
+                self.conn = None
+                self.cursor = None
+    
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensure connection is closed."""
+        self.close()
+        return False
+    
+    def __del__(self):
+        """Cleanup - ensure connection is closed."""
+        try:
+            self.close()
+        except Exception:
+            pass  # Suppress errors during cleanup
