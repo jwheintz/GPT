@@ -696,6 +696,11 @@ class OBSPluginManagerGUI:
     
     def _show_install_progress(self, plugin: Dict):
         """Show installation progress window."""
+        # Defensive check: Ensure installer is initialized
+        if self.plugin_installer is None:
+            messagebox.showerror("Initialization Error", "Plugin installer not initialized. OBS Studio must be installed.")
+            return
+        
         progress_window = tk.Toplevel(self.root)
         progress_window.title("Installing Plugin")
         progress_window.geometry("500x150")
@@ -748,6 +753,11 @@ class OBSPluginManagerGUI:
             messagebox.showerror("Error", "Cannot remove plugins while OBS is running. Please close OBS first.")
             return
         
+        # Defensive check: Ensure scanner and installer are initialized
+        if self.plugin_scanner is None or self.plugin_installer is None:
+            messagebox.showerror("Initialization Error", "Plugin manager not initialized. OBS Studio must be installed.")
+            return
+        
         selection = self.installed_tree.selection()
         if not selection:
             messagebox.showwarning("No Selection", "Please select a plugin to remove.")
@@ -780,6 +790,11 @@ class OBSPluginManagerGUI:
         """Rollback a plugin to previous version."""
         if self.obs_manager.is_obs_running():
             messagebox.showerror("Error", "Cannot rollback plugins while OBS is running. Please close OBS first.")
+            return
+        
+        # Defensive check: Ensure installer is initialized
+        if self.plugin_installer is None:
+            messagebox.showerror("Initialization Error", "Plugin installer not initialized. OBS Studio must be installed.")
             return
         
         selection = self.installed_tree.selection()
@@ -911,6 +926,10 @@ class OBSPluginManagerGUI:
         selection = self.installed_tree.selection()
         if not selection:
             return
+        
+        # Defensive check: Ensure scanner is initialized
+        if self.plugin_scanner is None:
+            return  # Silently fail for display-only function
         
         item = self.installed_tree.item(selection[0])
         plugin_name = item['values'][0]
