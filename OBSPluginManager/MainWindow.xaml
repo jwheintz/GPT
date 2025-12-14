@@ -1,0 +1,140 @@
+<Window x:Class="OBSPluginManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:OBSPluginManager.Converters"
+        mc:Ignorable="d"
+        Title="OBS Plugin Manager" Height="700" Width="1200"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#2D2D30" Padding="15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="OBS Plugin Manager" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="{Binding OBSStatusText}" FontSize="12" Foreground="#B0B0B0" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Refresh OBS Status" Command="{Binding RefreshOBSStatusCommand}" 
+                            Margin="5" Padding="10,5" Background="#007ACC" Foreground="White" BorderThickness="0"/>
+                    <Button Content="Kill OBS" Command="{Binding KillOBSCommand}" 
+                            Margin="5" Padding="10,5" Background="#D32F2F" Foreground="White" BorderThickness="0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Installed Plugins -->
+            <GroupBox Grid.Column="0" Header="Installed Plugins" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Button Grid.Row="0" Content="Scan for Plugins" Command="{Binding ScanPluginsCommand}" 
+                            Margin="0,0,0,10" Padding="10,5" HorizontalAlignment="Stretch"/>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding InstalledPlugins}" 
+                              SelectedItem="{Binding SelectedInstalledPlugin}"
+                              AutoGenerateColumns="False" IsReadOnly="True" 
+                              GridLinesVisibility="None" HeadersVisibility="Column"
+                              SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="100"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding PluginType}" Width="120"/>
+                            <DataGridTextColumn Header="Update Available" Binding="{Binding HasUpdate}" Width="120"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Update" Command="{Binding UpdatePluginCommand}" 
+                                Margin="0,0,5,0" Padding="10,5" Background="#4CAF50" Foreground="White" BorderThickness="0"/>
+                        <Button Content="Rollback" Command="{Binding RollbackPluginCommand}" 
+                                Padding="10,5" Background="#FF9800" Foreground="White" BorderThickness="0"/>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+
+            <!-- Catalog & Suggested Plugins -->
+            <GroupBox Grid.Column="2" Header="Plugin Catalog" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Button Grid.Row="0" Content="Refresh Catalog" Command="{Binding RefreshCatalogCommand}" 
+                            Margin="0,0,0,10" Padding="10,5" HorizontalAlignment="Stretch"/>
+
+                    <TabControl Grid.Row="1">
+                        <TabItem Header="All Plugins">
+                            <DataGrid ItemsSource="{Binding CatalogPlugins}" 
+                                      SelectedItem="{Binding SelectedCatalogPlugin}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" 
+                                      GridLinesVisibility="None" HeadersVisibility="Column"
+                                      SelectionMode="Single">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                                    <DataGridTextColumn Header="Author" Binding="{Binding Author}" Width="150"/>
+                                    <DataGridTextColumn Header="Version" Binding="{Binding LatestVersion}" Width="100"/>
+                                    <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="100"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Suggested">
+                            <DataGrid ItemsSource="{Binding SuggestedPlugins}" 
+                                      SelectedItem="{Binding SelectedCatalogPlugin}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" 
+                                      GridLinesVisibility="None" HeadersVisibility="Column"
+                                      SelectionMode="Single">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                                    <DataGridTextColumn Header="Author" Binding="{Binding Author}" Width="150"/>
+                                    <DataGridTextColumn Header="Version" Binding="{Binding LatestVersion}" Width="100"/>
+                                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                    </TabControl>
+
+                    <Button Grid.Row="2" Content="Install Selected Plugin" Command="{Binding InstallPluginCommand}" 
+                            Margin="0,10,0,0" Padding="10,5" HorizontalAlignment="Stretch"
+                            Background="#2196F3" Foreground="White" BorderThickness="0"/>
+                </Grid>
+            </GroupBox>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="#1E1E1E" Padding="10,5">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#B0B0B0" VerticalAlignment="Center"/>
+        </Border>
+    </Grid>
+
+    <Window.Resources>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+    </Window.Resources>
+</Window>

@@ -1,89 +1,153 @@
-# GPT
+# OBS Plugin Manager
 
-Short description
-- Replace this one-liner with a concise description of what this repository provides.
+A Windows-based OBS Plugin Management Solution that helps you discover, install, update, and manage OBS Studio plugins safely and efficiently.
 
-Status
-- TODO: update this with project status (alpha / beta / production), supported languages, and a short roadmap.
+## Features
 
-Quick links
-- Getting started: docs/GETTING_STARTED.md
-- Contributing: CONTRIBUTING.md
-- Issues: https://github.com/jwheintz/GPT/issues
+- **Plugin Catalog**: Maintains a database of popular OBS plugins that can be refreshed and updated (e.g., from BarRaider or other sources)
+- **Plugin Scanning**: Automatically scans your OBS installation to detect installed plugins and their versions
+- **Version Comparison**: Compares installed plugins with available versions and identifies updates
+- **Suggested Plugins**: Highlights recommended plugins to enhance your OBS setup
+- **Safe Operations**: Never allows writes to OBS plugin directories while OBS is running
+- **OBS Process Management**: 
+  - Check if OBS is running
+  - Kill OBS process when needed
+  - Query OBS status
+- **Plugin Management**:
+  - Download and install plugins
+  - Update existing plugins
+  - Rollback to previous versions (keeps archive of last 2 versions)
+- **Version Archive**: Automatically maintains rollback archives for safe plugin management
 
-Quickstart (generic)
-1. Prerequisites
-   - Git >= 2.20
-   - Node.js (if applicable): node >= 16 and npm or yarn
-   - Python (if applicable): python >= 3.8 and pip
-   - Go (if applicable): go >= 1.18
-   - Docker (optional): docker >= 20.x
+## Requirements
 
-2. Clone the repo
-```bash
-git clone https://github.com/jwheintz/GPT.git
-cd GPT
+- Windows 10/11
+- .NET 8.0 Runtime
+- OBS Studio installed
+
+## Installation
+
+1. Clone this repository
+2. Open the solution in Visual Studio 2022 or later
+3. Build the solution (Ctrl+Shift+B)
+4. Run the application
+
+## Usage
+
+### Getting Started
+
+1. **Check OBS Status**: The application will show whether OBS is currently running
+2. **Scan for Plugins**: Click "Scan for Plugins" to detect installed plugins in your OBS installation
+3. **Browse Catalog**: View available plugins in the catalog, including suggested plugins
+4. **Install/Update**: Select a plugin and click "Install" or "Update"
+
+### Safety Features
+
+- The application will **never** write to OBS plugin directories while OBS is running
+- If OBS is running and you attempt to install/update, you'll be prompted to close OBS first
+- Use the "Kill OBS" button to safely close OBS before performing plugin operations
+
+### Plugin Operations
+
+- **Install**: Download and install a new plugin from the catalog
+- **Update**: Update an existing plugin to the latest version
+- **Rollback**: Restore a previous version of a plugin (last 2 versions are kept)
+
+### Refreshing the Catalog
+
+The plugin catalog can be refreshed to get the latest plugin information. In a production environment, this would connect to APIs like BarRaider's plugin repository or GitHub releases.
+
+## Project Structure
+
+```
+OBSPluginManager/
+├── Models/              # Data models (Plugin, InstalledPlugin)
+├── Services/            # Core services
+│   ├── OBSProcessManager.cs    # OBS process detection and management
+│   ├── PluginDatabase.cs       # SQLite database for plugin catalog
+│   ├── PluginScanner.cs        # Scans OBS installation for plugins
+│   ├── VersionComparer.cs      # Version comparison logic
+│   ├── PluginInstaller.cs     # Plugin download, install, and rollback
+│   └── PluginCatalogSeeder.cs # Initial catalog data seeding
+├── ViewModels/          # MVVM view models
+├── Converters/          # WPF value converters
+├── MainWindow.xaml      # Main UI
+└── App.xaml             # Application entry point
 ```
 
-3. Identify language / build system
-- package.json → Node.js / TypeScript
-- pyproject.toml, requirements.txt or setup.py → Python
-- go.mod → Go
-- Cargo.toml → Rust
-- Dockerfile → containerized app
+## Technical Details
 
-4. Common install / run commands (pick the block matching this repo)
-- Node.js
-```bash
-npm ci
-npm run build    # if present
-npm start        # or `npm run dev`
-npm test
-```
-- Python (venv)
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python -m pytest
-```
-- Go
-```bash
-go mod download
-go build ./...
-go test ./...
-```
-- Docker
-```bash
-docker build -t gpt-app .
-docker run -p 8080:8080 --env-file .env gpt-app
-```
+### OBS Detection
 
-5. Run tests
-- Look for tests/ or __tests__/ or a Makefile target `test` and run accordingly:
+The application detects OBS installation through:
+1. Running process detection (`obs64.exe` or `obs32.exe`)
+2. Common installation paths (Program Files, AppData)
+3. Windows Registry lookup
+
+### Plugin Scanning
+
+Scans the following OBS directories:
+- `obs-plugins/` - 64-bit plugins
+- `data/obs-plugins/` - 32-bit/data plugins
+
+Extracts version information from:
+- DLL file version info
+- Version.txt files
+- Directory names
+
+### Version Archive
+
+When updating a plugin, the previous version is automatically archived to:
+`PluginArchives/{PluginName}/{Version}_{Timestamp}/`
+
+The system maintains the last 2 versions for rollback purposes.
+
+## Development
+
+### Building
+
 ```bash
-npm test
-pytest
-go test ./...
-make test
+dotnet build OBSPluginManager.sln
 ```
 
-6. Example usage
-- Replace the example below with repo-specific instructions:
+### Running
+
 ```bash
-# Start the app, then check health
-npm start
-curl http://localhost:8080/health
+dotnet run --project OBSPluginManager/OBSPluginManager.csproj
 ```
 
-7. Need help?
-- Open an issue at https://github.com/jwheintz/GPT/issues and include:
-  - OS/version
-  - Steps to reproduce
-  - Logs or error output
+### Adding New Plugin Sources
 
-What to update in this README
-- Replace the one-line description and project status
-- Add exact prerequisites and commands
-- Add environment variables / API keys required
-- Add maintainers and contact info or whatever
+To add support for new plugin sources (e.g., BarRaider API):
+
+1. Create a service that implements `IPluginSource`
+2. Update `PluginCatalogSeeder` to fetch from the new source
+3. The database will automatically update with new plugin information
+
+## Safety Considerations
+
+- **Never writes while OBS is running**: All write operations check OBS status first
+- **Rollback support**: Previous versions are archived before updates
+- **Process management**: Can safely terminate OBS when needed
+- **Error handling**: Comprehensive error handling prevents data loss
+
+## Future Enhancements
+
+- Integration with BarRaider API for automatic catalog updates
+- Plugin dependency management
+- Batch install/update operations
+- Plugin search and filtering
+- Export/import plugin configurations
+- Plugin ratings and reviews
+
+## License
+
+[Specify your license here]
+
+## Contributing
+
+See CONTRIBUTING.md for guidelines on contributing to this project.
+
+## Support
+
+For issues and feature requests, please open an issue on the GitHub repository.
