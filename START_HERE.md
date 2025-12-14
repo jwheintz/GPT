@@ -43,6 +43,7 @@ Complete technical overview of the entire project.
 | **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** | Need quick answer | 2 min |
 | **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** | Something's wrong | 5 min |
 | **[INSTALLATION_CHECKLIST.md](INSTALLATION_CHECKLIST.md)** | Verifying setup | 10 min |
+| **[DISCOVERY_GUIDE.md](DISCOVERY_GUIDE.md)** | Using Discovery & Local Repo | 10 min |
 
 ### For Developers
 
@@ -166,6 +167,8 @@ Complete technical overview of the entire project.
 - ⏮️ Rollback (keeps last 2 versions)
 - 🗂️ Complete operation history
 - 🎨 Clean, intuitive GUI
+- 🔍 **NEW**: Live Discovery (new/popular/trending plugins)
+- 📦 **NEW**: Local Repository (stores last 2 versions locally)
 
 ---
 

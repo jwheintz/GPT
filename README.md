@@ -12,6 +12,8 @@ A comprehensive Windows-based OBS Studio Plugin Management Solution that provide
 - **🗑️ Safe Removal**: Remove plugins with automatic backup creation
 - **⏮️ Rollback Support**: Keep archives of the last 2 versions for easy rollback
 - **🔐 OBS Process Management**: Prevents writes when OBS is running, can detect and terminate OBS
+- **🔍 Discovery**: Live GitHub queries to find new, popular, and trending OBS plugins and scripts
+- **📦 Local Repository**: Stores downloaded plugins/scripts locally with version tracking (last 2 versions)
 
 ### Safety Features
 - **OBS Status Monitoring**: Real-time detection of whether OBS is running
@@ -82,6 +84,22 @@ On first launch, the application will:
 - Update individual plugins or all at once
 - View update status
 
+#### Discovery Tab (🔍 Discover)
+- **New**: Recently updated plugins (last 30 days)
+- **Popular**: Most-starred plugins on GitHub
+- **Trending**: Recently created plugins gaining popularity
+- **Scripts**: OBS Lua and Python scripts
+- Live GitHub API queries with 6-hour caching
+- Add discovered plugins to your catalog
+- Open plugin homepages directly
+
+#### Local Repository Tab (📦 Local Repo)
+- View all downloaded plugins and scripts
+- Track versions stored (last 2 per plugin)
+- See repository statistics (count, size, dates)
+- Cleanup orphaned files
+- Fast reinstalls without re-downloading
+
 #### History Tab
 - View installation history
 - Track all plugin operations
@@ -126,6 +144,52 @@ If you need to install/update plugins:
 1. Click "Kill OBS" button in the toolbar
 2. Confirm the action
 3. OBS will be safely terminated
+
+### Discovery Features
+
+#### Finding New Plugins
+1. Go to "🔍 Discover" tab
+2. Select discovery mode:
+   - **New**: Recently updated (last 30 days)
+   - **Popular**: Most stars on GitHub
+   - **Trending**: Fast-growing new plugins
+   - **Scripts**: OBS Lua/Python scripts
+3. Click "Refresh Live Data" for fresh GitHub query
+4. Browse results, click for details
+5. Click "Add to Catalog" to bookmark
+6. Click "Open Homepage" to visit GitHub
+
+#### Live Data
+- Queries GitHub API in real-time
+- Shows stars, forks, last update
+- Auto-categorizes by type
+- Caches for 6 hours (avoid rate limits)
+- Force refresh anytime
+
+**See DISCOVERY_GUIDE.md for complete details**
+
+### Local Repository Features
+
+#### Automatic Storage
+- All downloaded plugins stored locally
+- Last 2 versions kept automatically
+- Older versions auto-deleted
+- SHA256 hash verification
+
+#### Repository Management
+1. Go to "📦 Local Repo" tab
+2. View all stored plugins and scripts
+3. See version count and disk usage
+4. Click "Cleanup Orphaned Files" to free space
+5. Click "Refresh" to update view
+
+#### Benefits
+- Fast reinstalls (no re-download)
+- Offline access to files
+- Version history preserved
+- Local backup of plugins
+
+**See DISCOVERY_GUIDE.md for complete details**
 
 ## Architecture
 

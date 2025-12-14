@@ -7,12 +7,15 @@ from tkinter import ttk, messagebox, scrolledtext
 import threading
 from pathlib import Path
 from typing import Optional, List, Dict
+from datetime import datetime
 
 from obs_manager import OBSManager
 from plugin_scanner import PluginScanner
 from plugin_repository import PluginRepository
 from plugin_installer import PluginInstaller
 from database import PluginDatabase
+from local_repository import LocalRepository
+from discovery import PluginDiscovery
 
 
 class OBSPluginManagerGUI:
@@ -30,10 +33,13 @@ class OBSPluginManagerGUI:
         self.plugin_repository = PluginRepository()
         self.plugin_installer = None
         self.database = PluginDatabase()
+        self.local_repository = LocalRepository()
+        self.discovery = PluginDiscovery()
         
         # State variables
         self.installed_plugins = []
         self.available_plugins = []
+        self.discovery_plugins = {"new": [], "popular": [], "trending": []}
         self.current_tab = None
         
         # Setup UI
@@ -87,8 +93,10 @@ class OBSPluginManagerGUI:
         # Create tabs
         self._create_installed_tab()
         self._create_available_tab()
+        self._create_discovery_tab()
         self._create_updates_tab()
         self._create_history_tab()
+        self._create_repository_tab()
         
         # Bottom status bar
         self.bottom_status = ttk.Label(self.root, text="Ready", relief=tk.SUNKEN, anchor=tk.W)
@@ -199,6 +207,138 @@ class OBSPluginManagerGUI:
         self.available_details.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
         self.available_tree.bind("<<TreeviewSelect>>", self._on_available_select)
+    
+    def _create_discovery_tab(self):
+        """Create the discovery tab for new/popular/trending plugins."""
+        frame = ttk.Frame(self.notebook)
+        self.notebook.add(frame, text="🔍 Discover")
+        
+        # Toolbar with refresh options
+        toolbar = ttk.Frame(frame)
+        toolbar.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
+        
+        ttk.Label(toolbar, text="Discover:").pack(side=tk.LEFT, padx=5)
+        
+        self.discovery_mode = tk.StringVar(value="popular")
+        ttk.Radiobutton(toolbar, text="New", variable=self.discovery_mode, value="new", 
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(toolbar, text="Popular", variable=self.discovery_mode, value="popular",
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(toolbar, text="Trending", variable=self.discovery_mode, value="trending",
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(toolbar, text="Scripts", variable=self.discovery_mode, value="scripts",
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT, padx=5)
+        
+        ttk.Button(toolbar, text="Refresh Live Data", command=self._refresh_discovery).pack(side=tk.RIGHT, padx=5)
+        
+        # Status label
+        self.discovery_status = ttk.Label(toolbar, text="", foreground="blue")
+        self.discovery_status.pack(side=tk.RIGHT, padx=10)
+        
+        # Discovery list
+        list_frame = ttk.Frame(frame)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        columns = ("author", "stars", "category", "updated")
+        self.discovery_tree = ttk.Treeview(list_frame, columns=columns, show="tree headings")
+        
+        self.discovery_tree.heading("#0", text="Plugin/Script")
+        self.discovery_tree.heading("author", text="Author")
+        self.discovery_tree.heading("stars", text="⭐ Stars")
+        self.discovery_tree.heading("category", text="Category")
+        self.discovery_tree.heading("updated", text="Last Updated")
+        
+        self.discovery_tree.column("#0", width=250)
+        self.discovery_tree.column("author", width=150)
+        self.discovery_tree.column("stars", width=100)
+        self.discovery_tree.column("category", width=120)
+        self.discovery_tree.column("updated", width=150)
+        
+        scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.discovery_tree.yview)
+        self.discovery_tree.configure(yscrollcommand=scrollbar.set)
+        
+        self.discovery_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Details panel
+        details_frame = ttk.LabelFrame(frame, text="Details & Links")
+        details_frame.pack(fill=tk.X, padx=5, pady=5)
+        
+        self.discovery_details = scrolledtext.ScrolledText(details_frame, height=8, wrap=tk.WORD)
+        self.discovery_details.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        # Action buttons
+        action_frame = ttk.Frame(details_frame)
+        action_frame.pack(pady=5)
+        
+        ttk.Button(action_frame, text="Open Homepage", command=self._open_discovery_homepage).pack(side=tk.LEFT, padx=5)
+        ttk.Button(action_frame, text="Add to Catalog", command=self._add_discovery_to_catalog).pack(side=tk.LEFT, padx=5)
+        
+        self.discovery_tree.bind("<<TreeviewSelect>>", self._on_discovery_select)
+    
+    def _create_repository_tab(self):
+        """Create the local repository tab."""
+        frame = ttk.Frame(self.notebook)
+        self.notebook.add(frame, text="📦 Local Repo")
+        
+        # Toolbar
+        toolbar = ttk.Frame(frame)
+        toolbar.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
+        
+        ttk.Button(toolbar, text="Refresh", command=self._refresh_repository).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="Cleanup Orphaned Files", command=self._cleanup_repository).pack(side=tk.LEFT, padx=5)
+        
+        # Stats frame
+        stats_frame = ttk.LabelFrame(frame, text="Repository Statistics")
+        stats_frame.pack(fill=tk.X, padx=5, pady=5)
+        
+        self.repo_stats_text = ttk.Label(stats_frame, text="Loading repository stats...")
+        self.repo_stats_text.pack(padx=10, pady=10)
+        
+        # Repository list
+        list_frame = ttk.Frame(frame)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        # Tabs for plugins and scripts
+        repo_notebook = ttk.Notebook(list_frame)
+        repo_notebook.pack(fill=tk.BOTH, expand=True)
+        
+        # Plugins tab
+        plugins_frame = ttk.Frame(repo_notebook)
+        repo_notebook.add(plugins_frame, text="Plugins")
+        
+        columns = ("version", "versions", "size", "added")
+        self.repo_plugins_tree = ttk.Treeview(plugins_frame, columns=columns, show="tree headings")
+        
+        self.repo_plugins_tree.heading("#0", text="Plugin Name")
+        self.repo_plugins_tree.heading("version", text="Latest Version")
+        self.repo_plugins_tree.heading("versions", text="Versions Stored")
+        self.repo_plugins_tree.heading("size", text="Size")
+        self.repo_plugins_tree.heading("added", text="Added")
+        
+        scrollbar1 = ttk.Scrollbar(plugins_frame, orient=tk.VERTICAL, command=self.repo_plugins_tree.yview)
+        self.repo_plugins_tree.configure(yscrollcommand=scrollbar1.set)
+        
+        self.repo_plugins_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar1.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Scripts tab
+        scripts_frame = ttk.Frame(repo_notebook)
+        repo_notebook.add(scripts_frame, text="Scripts")
+        
+        self.repo_scripts_tree = ttk.Treeview(scripts_frame, columns=columns, show="tree headings")
+        
+        self.repo_scripts_tree.heading("#0", text="Script Name")
+        self.repo_scripts_tree.heading("version", text="Latest Version")
+        self.repo_scripts_tree.heading("versions", text="Versions Stored")
+        self.repo_scripts_tree.heading("size", text="Size")
+        self.repo_scripts_tree.heading("added", text="Added")
+        
+        scrollbar2 = ttk.Scrollbar(scripts_frame, orient=tk.VERTICAL, command=self.repo_scripts_tree.yview)
+        self.repo_scripts_tree.configure(yscrollcommand=scrollbar2.set)
+        
+        self.repo_scripts_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar2.pack(side=tk.RIGHT, fill=tk.Y)
     
     def _create_updates_tab(self):
         """Create the updates tab."""
@@ -328,6 +468,12 @@ class OBSPluginManagerGUI:
         
         # Load history
         self._load_history()
+        
+        # Load repository
+        self._refresh_repository()
+        
+        # Load discovery (cached data)
+        self._update_discovery_list()
         
         # Update OBS status
         self._update_obs_status()
@@ -817,6 +963,324 @@ class OBSPluginManagerGUI:
     def set_status(self, message: str):
         """Set status bar message."""
         self.bottom_status.config(text=message)
+    
+    # Discovery tab methods
+    def _switch_discovery_mode(self):
+        """Switch between discovery modes."""
+        mode = self.discovery_mode.get()
+        self._update_discovery_list()
+    
+    def _refresh_discovery(self):
+        """Refresh discovery data with live queries."""
+        self.set_status("Refreshing discovery data (live query)...")
+        self.discovery_status.config(text="Querying GitHub API...")
+        
+        def refresh_thread():
+            mode = self.discovery_mode.get()
+            
+            try:
+                if mode == "new":
+                    plugins = self.discovery.discover_new_plugins(max_results=20, force_refresh=True)
+                    self.discovery_plugins["new"] = plugins
+                elif mode == "popular":
+                    plugins = self.discovery.discover_popular_plugins(max_results=20, force_refresh=True)
+                    self.discovery_plugins["popular"] = plugins
+                elif mode == "trending":
+                    plugins = self.discovery.discover_trending_plugins(max_results=20, force_refresh=True)
+                    self.discovery_plugins["trending"] = plugins
+                elif mode == "scripts":
+                    plugins = self.discovery.discover_obs_scripts(max_results=20, force_refresh=True)
+                    self.discovery_plugins["scripts"] = plugins
+                
+                self.root.after(0, self._update_discovery_list)
+                self.root.after(0, lambda: self.set_status(f"Found {len(plugins)} {mode} plugins/scripts"))
+                self.root.after(0, lambda: self.discovery_status.config(text=f"Last updated: {datetime.now().strftime('%H:%M')}"))
+            except Exception as e:
+                self.root.after(0, lambda: self.set_status(f"Discovery refresh failed: {str(e)}"))
+                self.root.after(0, lambda: self.discovery_status.config(text="Error querying API"))
+        
+        threading.Thread(target=refresh_thread, daemon=True).start()
+    
+    def _update_discovery_list(self):
+        """Update the discovery list based on current mode."""
+        # Clear current items
+        for item in self.discovery_tree.get_children():
+            self.discovery_tree.delete(item)
+        
+        mode = self.discovery_mode.get()
+        
+        # Get appropriate list
+        if mode == "new":
+            if not self.discovery_plugins["new"]:
+                self.discovery_plugins["new"] = self.discovery.discover_new_plugins()
+            plugins = self.discovery_plugins["new"]
+        elif mode == "popular":
+            if not self.discovery_plugins["popular"]:
+                self.discovery_plugins["popular"] = self.discovery.discover_popular_plugins()
+            plugins = self.discovery_plugins["popular"]
+        elif mode == "trending":
+            if not self.discovery_plugins["trending"]:
+                self.discovery_plugins["trending"] = self.discovery.discover_trending_plugins()
+            plugins = self.discovery_plugins["trending"]
+        elif mode == "scripts":
+            if not self.discovery_plugins.get("scripts"):
+                self.discovery_plugins["scripts"] = self.discovery.discover_obs_scripts()
+            plugins = self.discovery_plugins.get("scripts", [])
+        else:
+            plugins = []
+        
+        # Add to tree
+        for plugin in plugins:
+            # Format updated date
+            updated_str = plugin.get("updated_at", "")
+            if updated_str:
+                try:
+                    updated_dt = datetime.strptime(updated_str, "%Y-%m-%dT%H:%M:%SZ")
+                    updated_display = updated_dt.strftime("%Y-%m-%d")
+                except Exception:
+                    updated_display = "Unknown"
+            else:
+                updated_display = "Unknown"
+            
+            display_name = plugin.get("display_name", plugin["name"])
+            if plugin.get("is_script"):
+                display_name = "📜 " + display_name
+            
+            self.discovery_tree.insert(
+                "",
+                tk.END,
+                text=display_name,
+                values=(
+                    plugin.get("author", "Unknown"),
+                    plugin.get("stars", 0),
+                    plugin.get("category", "Other"),
+                    updated_display
+                )
+            )
+        
+        # Update status
+        cache_info = self.discovery.get_cache_info()
+        cache_key = f"{mode}_plugins" if mode != "scripts" else "obs_scripts"
+        if cache_key in cache_info:
+            age_hours = cache_info[cache_key].get("age_hours", 0)
+            self.discovery_status.config(text=f"Cached {age_hours:.1f}h ago")
+    
+    def _on_discovery_select(self, event):
+        """Handle selection in discovery list."""
+        selection = self.discovery_tree.selection()
+        if not selection:
+            return
+        
+        item = self.discovery_tree.item(selection[0])
+        plugin_name = item['text'].replace("📜 ", "")
+        
+        # Find plugin in current mode's list
+        mode = self.discovery_mode.get()
+        if mode == "new":
+            plugins = self.discovery_plugins["new"]
+        elif mode == "popular":
+            plugins = self.discovery_plugins["popular"]
+        elif mode == "trending":
+            plugins = self.discovery_plugins["trending"]
+        elif mode == "scripts":
+            plugins = self.discovery_plugins.get("scripts", [])
+        else:
+            plugins = []
+        
+        plugin = None
+        for p in plugins:
+            if p.get("display_name", p["name"]) == plugin_name:
+                plugin = p
+                break
+        
+        if plugin:
+            details = f"{plugin.get('display_name', plugin['name'])}\n"
+            details += f"{'=' * 60}\n\n"
+            details += f"Repository: {plugin.get('full_name', 'Unknown')}\n"
+            details += f"Author: {plugin.get('author', 'Unknown')}\n"
+            details += f"Category: {plugin.get('category', 'Other')}\n"
+            details += f"Stars: ⭐ {plugin.get('stars', 0)}\n"
+            details += f"Forks: {plugin.get('forks', 0)}\n"
+            details += f"Language: {plugin.get('language', 'Unknown')}\n"
+            if plugin.get("is_script"):
+                details += f"Type: OBS Script\n"
+            else:
+                details += f"Type: OBS Plugin\n"
+            details += f"\nLast Updated: {plugin.get('updated_at', 'Unknown')}\n"
+            details += f"\nDescription:\n{plugin.get('description', 'No description')}\n\n"
+            details += f"Homepage: {plugin.get('homepage_url', 'N/A')}\n"
+            details += f"Download: {plugin.get('download_url', 'N/A')}\n"
+            
+            if plugin.get("trending_score"):
+                details += f"\nTrending Score: {plugin['trending_score']:.2f}\n"
+            
+            self.discovery_details.delete(1.0, tk.END)
+            self.discovery_details.insert(1.0, details)
+    
+    def _open_discovery_homepage(self):
+        """Open the homepage of selected discovery item."""
+        selection = self.discovery_tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a plugin/script to open.")
+            return
+        
+        item = self.discovery_tree.item(selection[0])
+        plugin_name = item['text'].replace("📜 ", "")
+        
+        # Find plugin
+        mode = self.discovery_mode.get()
+        if mode == "new":
+            plugins = self.discovery_plugins["new"]
+        elif mode == "popular":
+            plugins = self.discovery_plugins["popular"]
+        elif mode == "trending":
+            plugins = self.discovery_plugins["trending"]
+        elif mode == "scripts":
+            plugins = self.discovery_plugins.get("scripts", [])
+        else:
+            return
+        
+        plugin = None
+        for p in plugins:
+            if p.get("display_name", p["name"]) == plugin_name:
+                plugin = p
+                break
+        
+        if plugin and plugin.get("homepage_url"):
+            import webbrowser
+            webbrowser.open(plugin["homepage_url"])
+    
+    def _add_discovery_to_catalog(self):
+        """Add discovered plugin to the main catalog."""
+        selection = self.discovery_tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a plugin/script to add.")
+            return
+        
+        item = self.discovery_tree.item(selection[0])
+        plugin_name = item['text'].replace("📜 ", "")
+        
+        # Find plugin
+        mode = self.discovery_mode.get()
+        if mode == "new":
+            plugins = self.discovery_plugins["new"]
+        elif mode == "popular":
+            plugins = self.discovery_plugins["popular"]
+        elif mode == "trending":
+            plugins = self.discovery_plugins["trending"]
+        elif mode == "scripts":
+            plugins = self.discovery_plugins.get("scripts", [])
+        else:
+            return
+        
+        plugin = None
+        for p in plugins:
+            if p.get("display_name", p["name"]) == plugin_name:
+                plugin = p
+                break
+        
+        if plugin:
+            # Add to database catalog
+            success = self.database.add_plugin_to_catalog(
+                name=plugin["name"],
+                display_name=plugin.get("display_name", plugin["name"]),
+                description=plugin.get("description", ""),
+                author=plugin.get("author", ""),
+                category=plugin.get("category", "Other"),
+                download_url=plugin.get("download_url", ""),
+                homepage_url=plugin.get("homepage_url", ""),
+                is_recommended=False,
+                metadata={"discovered": True, "stars": plugin.get("stars", 0)}
+            )
+            
+            if success:
+                messagebox.showinfo("Success", f"Added {plugin['name']} to catalog!")
+                self._load_available_plugins()  # Refresh available plugins
+            else:
+                messagebox.showerror("Error", "Failed to add to catalog")
+    
+    # Repository tab methods
+    def _refresh_repository(self):
+        """Refresh the local repository view."""
+        self.set_status("Refreshing local repository...")
+        
+        # Update stats
+        stats = self.local_repository.get_repository_stats()
+        stats_text = f"Total Plugins: {stats['total_plugins']}  |  "
+        stats_text += f"Total Scripts: {stats['total_scripts']}  |  "
+        stats_text += f"Total Versions: {stats['total_plugin_versions'] + stats['total_script_versions']}  |  "
+        stats_text += f"Total Size: {stats['total_size_mb']:.2f} MB"
+        self.repo_stats_text.config(text=stats_text)
+        
+        # Update plugins list
+        for item in self.repo_plugins_tree.get_children():
+            self.repo_plugins_tree.delete(item)
+        
+        plugins = self.local_repository.list_all_plugins()
+        for plugin in plugins:
+            size_mb = plugin['size'] / (1024 * 1024)
+            added_date = plugin.get('latest_added', '')
+            if added_date:
+                try:
+                    dt = datetime.fromisoformat(added_date)
+                    added_display = dt.strftime("%Y-%m-%d")
+                except Exception:
+                    added_display = "Unknown"
+            else:
+                added_display = "Unknown"
+            
+            self.repo_plugins_tree.insert(
+                "",
+                tk.END,
+                text=plugin['name'],
+                values=(
+                    plugin['latest_version'],
+                    plugin['version_count'],
+                    f"{size_mb:.2f} MB",
+                    added_display
+                )
+            )
+        
+        # Update scripts list
+        for item in self.repo_scripts_tree.get_children():
+            self.repo_scripts_tree.delete(item)
+        
+        scripts = self.local_repository.list_all_scripts()
+        for script in scripts:
+            size_mb = script['size'] / (1024 * 1024)
+            added_date = script.get('latest_added', '')
+            if added_date:
+                try:
+                    dt = datetime.fromisoformat(added_date)
+                    added_display = dt.strftime("%Y-%m-%d")
+                except Exception:
+                    added_display = "Unknown"
+            else:
+                added_display = "Unknown"
+            
+            self.repo_scripts_tree.insert(
+                "",
+                tk.END,
+                text=script['name'],
+                values=(
+                    script['latest_version'],
+                    script['version_count'],
+                    f"{size_mb:.2f} MB",
+                    added_display
+                )
+            )
+        
+        self.set_status(f"Repository: {stats['total_plugins']} plugins, {stats['total_scripts']} scripts")
+    
+    def _cleanup_repository(self):
+        """Cleanup orphaned files in repository."""
+        if messagebox.askyesno("Cleanup Repository", 
+                              "This will remove files not referenced in the repository index.\n\nContinue?"):
+            files_removed, space_freed = self.local_repository.cleanup_orphaned_files()
+            space_mb = space_freed / (1024 * 1024)
+            messagebox.showinfo("Cleanup Complete", 
+                               f"Removed {files_removed} file(s)\nFreed {space_mb:.2f} MB")
+            self._refresh_repository()
 
 
 def main():

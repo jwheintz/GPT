@@ -67,13 +67,34 @@
 
 9. **User Interface**
    - Clean, intuitive Tkinter GUI
-   - Four-tab interface:
+   - Six-tab interface:
      * Installed Plugins
      * Available Plugins
+     * 🔍 Discovery (NEW)
      * Updates
      * History
+     * 📦 Local Repository (NEW)
    - Real-time status updates
    - Detailed plugin information panels
+
+10. **Discovery System** (NEW)
+    - Live GitHub API queries
+    - Find new plugins (last 30 days)
+    - Find popular plugins (by stars)
+    - Find trending plugins (fast-growing)
+    - Discover OBS scripts (Lua/Python)
+    - 6-hour caching to avoid rate limits
+    - Auto-categorization
+    - Add to catalog from discovery
+
+11. **Local Repository** (NEW)
+    - Stores downloaded plugins/scripts locally
+    - Keeps last 2 versions automatically
+    - SHA256 hash verification
+    - Version tracking and metadata
+    - Repository statistics
+    - Cleanup orphaned files
+    - Fast reinstalls without re-download
 
 ## Project Structure
 
