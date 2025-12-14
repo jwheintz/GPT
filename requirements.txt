@@ -4,6 +4,7 @@
 # Core dependencies
 psutil>=5.9.0          # Process and system utilities
 requests>=2.31.0       # HTTP library for downloading plugins
+beautifulsoup4>=4.12.0 # HTML parsing for OBS website
 
 # Optional but recommended
 # For better Windows integration

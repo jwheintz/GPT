@@ -1,5 +1,6 @@
 """
 Discovery Module - finds new, popular, and trending OBS plugins and scripts.
+Queries both GitHub API and official OBS website.
 """
 
 import requests
@@ -8,6 +9,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 import re
+from obs_resources import OBSResourcesFetcher
 
 
 class PluginDiscovery:
@@ -52,6 +54,9 @@ class PluginDiscovery:
         
         self.cache_file = self.cache_dir / "discovery_cache.json"
         self.cache_expiry = timedelta(hours=6)  # Refresh every 6 hours
+        
+        # Initialize OBS Resources fetcher
+        self.obs_resources = OBSResourcesFetcher()
         
         self._load_cache()
     
@@ -526,3 +531,112 @@ class PluginDiscovery:
             }
         
         return info
+    
+    def discover_obs_website_plugins(self, max_results: int = 50, force_refresh: bool = False) -> List[Dict]:
+        """
+        Discover plugins from the official OBS website.
+        
+        Args:
+            max_results: Maximum number of results
+            force_refresh: Force fresh query (ignore cache)
+            
+        Returns:
+            List of plugin dictionaries from OBS Resources
+        """
+        cache_key = "obs_website_plugins"
+        
+        if not force_refresh and self._is_cache_valid(cache_key):
+            return self.cache[cache_key].get("results", [])[:max_results]
+        
+        plugins = self.obs_resources.fetch_obs_plugins(max_results=max_results, force_refresh=True)
+        
+        # Cache results
+        self.cache[cache_key] = {
+            "cached_at": datetime.now().isoformat(),
+            "results": plugins[:max_results]
+        }
+        self._save_cache()
+        
+        return plugins[:max_results]
+    
+    def discover_obs_website_scripts(self, max_results: int = 50, force_refresh: bool = False) -> List[Dict]:
+        """
+        Discover scripts from the official OBS website.
+        
+        Args:
+            max_results: Maximum number of results
+            force_refresh: Force fresh query (ignore cache)
+            
+        Returns:
+            List of script dictionaries from OBS Resources
+        """
+        cache_key = "obs_website_scripts"
+        
+        if not force_refresh and self._is_cache_valid(cache_key):
+            return self.cache[cache_key].get("results", [])[:max_results]
+        
+        scripts = self.obs_resources.fetch_obs_scripts(max_results=max_results, force_refresh=True)
+        
+        # Cache results
+        self.cache[cache_key] = {
+            "cached_at": datetime.now().isoformat(),
+            "results": scripts[:max_results]
+        }
+        self._save_cache()
+        
+        return scripts[:max_results]
+    
+    def discover_combined_popular(self, max_results: int = 30, force_refresh: bool = False) -> List[Dict]:
+        """
+        Discover popular plugins from both GitHub and OBS website.
+        
+        Args:
+            max_results: Maximum number of results
+            force_refresh: Force fresh query
+            
+        Returns:
+            Combined list of popular plugins from both sources
+        """
+        cache_key = "combined_popular"
+        
+        if not force_refresh and self._is_cache_valid(cache_key):
+            return self.cache[cache_key].get("results", [])[:max_results]
+        
+        # Get from both sources
+        github_plugins = self.discover_popular_plugins(max_results=20, force_refresh=force_refresh)
+        obs_plugins = self.obs_resources.fetch_popular_plugins(max_results=20, force_refresh=force_refresh)
+        
+        # Combine and deduplicate
+        combined = []
+        seen_names = set()
+        
+        # Add GitHub plugins first (they have more metadata)
+        for plugin in github_plugins:
+            name = plugin.get('name', '').lower()
+            if name not in seen_names:
+                plugin['source'] = 'GitHub'
+                combined.append(plugin)
+                seen_names.add(name)
+        
+        # Add OBS website plugins
+        for plugin in obs_plugins:
+            name = plugin.get('name', '').lower()
+            if name not in seen_names:
+                plugin['source'] = 'OBS Resources'
+                combined.append(plugin)
+                seen_names.add(name)
+        
+        # Sort by popularity (stars for GitHub, rating*downloads for OBS)
+        combined.sort(key=lambda x: (
+            x.get('stars', 0) if x.get('source') == 'GitHub' 
+            else x.get('rating_weighted', 0) * 100 + x.get('downloads', 0) / 100
+        ), reverse=True)
+        
+        # Cache results
+        self.cache[cache_key] = {
+            "cached_at": datetime.now().isoformat(),
+            "results": combined[:max_results]
+        }
+        self._save_cache()
+        
+        return combined[:max_results]

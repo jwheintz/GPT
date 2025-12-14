@@ -44,6 +44,7 @@ Complete technical overview of the entire project.
 | **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** | Something's wrong | 5 min |
 | **[INSTALLATION_CHECKLIST.md](INSTALLATION_CHECKLIST.md)** | Verifying setup | 10 min |
 | **[DISCOVERY_GUIDE.md](DISCOVERY_GUIDE.md)** | Using Discovery & Local Repo | 10 min |
+| **[OBS_WEBSITE_INTEGRATION.md](OBS_WEBSITE_INTEGRATION.md)** | OBS Site + GitHub Integration | 10 min |
 
 ### For Developers
 

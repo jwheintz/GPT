@@ -12,7 +12,8 @@ A comprehensive Windows-based OBS Studio Plugin Management Solution that provide
 - **🗑️ Safe Removal**: Remove plugins with automatic backup creation
 - **⏮️ Rollback Support**: Keep archives of the last 2 versions for easy rollback
 - **🔐 OBS Process Management**: Prevents writes when OBS is running, can detect and terminate OBS
-- **🔍 Discovery**: Live GitHub queries to find new, popular, and trending OBS plugins and scripts
+- **🔍 Discovery**: Live queries to GitHub **AND** OBS website to find new, popular, and trending plugins
+- **🌐 Dual-Source**: Query GitHub repos OR official OBS Resources page OR both combined
 - **📦 Local Repository**: Stores downloaded plugins/scripts locally with version tracking (last 2 versions)
 
 ### Safety Features
@@ -159,14 +160,21 @@ If you need to install/update plugins:
 5. Click "Add to Catalog" to bookmark
 6. Click "Open Homepage" to visit GitHub
 
-#### Live Data
-- Queries GitHub API in real-time
-- Shows stars, forks, last update
+#### Live Data from Multiple Sources
+- **GitHub API**: Stars, forks, trending scores
+- **OBS Resources**: Ratings, downloads, community discussion
+- **Combined Mode**: Best of both worlds!
 - Auto-categorizes by type
-- Caches for 6 hours (avoid rate limits)
+- Smart caching (6-24 hours)
 - Force refresh anytime
 
-**See DISCOVERY_GUIDE.md for complete details**
+#### Source Selection
+Choose your discovery source:
+- **Combined**: GitHub + OBS Resources (deduplicated)
+- **GitHub**: Open source repositories only
+- **OBS Site**: Official OBS Resources page only
+
+**See DISCOVERY_GUIDE.md and OBS_WEBSITE_INTEGRATION.md for complete details**
 
 ### Local Repository Features
 

@@ -5,6 +5,7 @@ GUI Application - Main graphical user interface for OBS Plugin Manager.
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 import threading
+import re
 from pathlib import Path
 from typing import Optional, List, Dict
 from datetime import datetime
@@ -39,7 +40,11 @@ class OBSPluginManagerGUI:
         # State variables
         self.installed_plugins = []
         self.available_plugins = []
-        self.discovery_plugins = {"new": [], "popular": [], "trending": []}
+        self.discovery_plugins = {
+            "github_new": [], "github_popular": [], "github_trending": [], "github_scripts": [],
+            "obs_site_plugins": [], "obs_site_scripts": [],
+            "combined_popular": []
+        }
         self.current_tab = None
         
         # Setup UI
@@ -217,17 +222,31 @@ class OBSPluginManagerGUI:
         toolbar = ttk.Frame(frame)
         toolbar.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
         
-        ttk.Label(toolbar, text="Discover:").pack(side=tk.LEFT, padx=5)
+        ttk.Label(toolbar, text="Source:").pack(side=tk.LEFT, padx=5)
+        
+        self.discovery_source = tk.StringVar(value="combined")
+        source_frame = ttk.Frame(toolbar)
+        source_frame.pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(source_frame, text="Combined", variable=self.discovery_source, value="combined",
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT)
+        ttk.Radiobutton(source_frame, text="GitHub", variable=self.discovery_source, value="github",
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT)
+        ttk.Radiobutton(source_frame, text="OBS Site", variable=self.discovery_source, value="obs_site",
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT)
+        
+        ttk.Label(toolbar, text="  |  Mode:").pack(side=tk.LEFT, padx=5)
         
         self.discovery_mode = tk.StringVar(value="popular")
-        ttk.Radiobutton(toolbar, text="New", variable=self.discovery_mode, value="new", 
-                       command=self._switch_discovery_mode).pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(toolbar, text="Popular", variable=self.discovery_mode, value="popular",
-                       command=self._switch_discovery_mode).pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(toolbar, text="Trending", variable=self.discovery_mode, value="trending",
-                       command=self._switch_discovery_mode).pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(toolbar, text="Scripts", variable=self.discovery_mode, value="scripts",
-                       command=self._switch_discovery_mode).pack(side=tk.LEFT, padx=5)
+        mode_frame = ttk.Frame(toolbar)
+        mode_frame.pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(mode_frame, text="Popular", variable=self.discovery_mode, value="popular",
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT)
+        ttk.Radiobutton(mode_frame, text="New", variable=self.discovery_mode, value="new", 
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT)
+        ttk.Radiobutton(mode_frame, text="Trending", variable=self.discovery_mode, value="trending",
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT)
+        ttk.Radiobutton(mode_frame, text="Scripts", variable=self.discovery_mode, value="scripts",
+                       command=self._switch_discovery_mode).pack(side=tk.LEFT)
         
         ttk.Button(toolbar, text="Refresh Live Data", command=self._refresh_discovery).pack(side=tk.RIGHT, padx=5)
         
@@ -972,79 +991,129 @@ class OBSPluginManagerGUI:
     
     def _refresh_discovery(self):
         """Refresh discovery data with live queries."""
-        self.set_status("Refreshing discovery data (live query)...")
-        self.discovery_status.config(text="Querying GitHub API...")
+        source = self.discovery_source.get()
+        mode = self.discovery_mode.get()
+        
+        if source == "obs_site":
+            self.set_status("Querying OBS website...")
+            self.discovery_status.config(text="Querying OBS Resources...")
+        elif source == "github":
+            self.set_status("Querying GitHub API...")
+            self.discovery_status.config(text="Querying GitHub...")
+        else:
+            self.set_status("Querying both sources...")
+            self.discovery_status.config(text="Querying multiple sources...")
         
         def refresh_thread():
-            mode = self.discovery_mode.get()
-            
             try:
-                if mode == "new":
-                    plugins = self.discovery.discover_new_plugins(max_results=20, force_refresh=True)
-                    self.discovery_plugins["new"] = plugins
-                elif mode == "popular":
-                    plugins = self.discovery.discover_popular_plugins(max_results=20, force_refresh=True)
-                    self.discovery_plugins["popular"] = plugins
-                elif mode == "trending":
-                    plugins = self.discovery.discover_trending_plugins(max_results=20, force_refresh=True)
-                    self.discovery_plugins["trending"] = plugins
-                elif mode == "scripts":
-                    plugins = self.discovery.discover_obs_scripts(max_results=20, force_refresh=True)
-                    self.discovery_plugins["scripts"] = plugins
+                cache_key = f"{source}_{mode}"
+                
+                if source == "combined" and mode == "popular":
+                    plugins = self.discovery.discover_combined_popular(max_results=30, force_refresh=True)
+                    self.discovery_plugins["combined_popular"] = plugins
+                elif source == "obs_site":
+                    if mode == "scripts":
+                        plugins = self.discovery.discover_obs_website_scripts(max_results=50, force_refresh=True)
+                        self.discovery_plugins["obs_site_scripts"] = plugins
+                    else:
+                        plugins = self.discovery.discover_obs_website_plugins(max_results=50, force_refresh=True)
+                        self.discovery_plugins["obs_site_plugins"] = plugins
+                elif source == "github":
+                    if mode == "new":
+                        plugins = self.discovery.discover_new_plugins(max_results=20, force_refresh=True)
+                        self.discovery_plugins["github_new"] = plugins
+                    elif mode == "popular":
+                        plugins = self.discovery.discover_popular_plugins(max_results=20, force_refresh=True)
+                        self.discovery_plugins["github_popular"] = plugins
+                    elif mode == "trending":
+                        plugins = self.discovery.discover_trending_plugins(max_results=20, force_refresh=True)
+                        self.discovery_plugins["github_trending"] = plugins
+                    elif mode == "scripts":
+                        plugins = self.discovery.discover_obs_scripts(max_results=20, force_refresh=True)
+                        self.discovery_plugins["github_scripts"] = plugins
+                else:
+                    plugins = []
                 
                 self.root.after(0, self._update_discovery_list)
-                self.root.after(0, lambda: self.set_status(f"Found {len(plugins)} {mode} plugins/scripts"))
-                self.root.after(0, lambda: self.discovery_status.config(text=f"Last updated: {datetime.now().strftime('%H:%M')}"))
+                self.root.after(0, lambda: self.set_status(f"Found {len(plugins)} plugins/scripts from {source}"))
+                self.root.after(0, lambda: self.discovery_status.config(text=f"Updated: {datetime.now().strftime('%H:%M')}"))
             except Exception as e:
                 self.root.after(0, lambda: self.set_status(f"Discovery refresh failed: {str(e)}"))
-                self.root.after(0, lambda: self.discovery_status.config(text="Error querying API"))
+                self.root.after(0, lambda: self.discovery_status.config(text="Error querying"))
         
         threading.Thread(target=refresh_thread, daemon=True).start()
     
     def _update_discovery_list(self):
-        """Update the discovery list based on current mode."""
+        """Update the discovery list based on current source and mode."""
         # Clear current items
         for item in self.discovery_tree.get_children():
             self.discovery_tree.delete(item)
         
+        source = self.discovery_source.get()
         mode = self.discovery_mode.get()
+        cache_key = f"{source}_{mode}"
         
         # Get appropriate list
-        if mode == "new":
-            if not self.discovery_plugins["new"]:
-                self.discovery_plugins["new"] = self.discovery.discover_new_plugins()
-            plugins = self.discovery_plugins["new"]
-        elif mode == "popular":
-            if not self.discovery_plugins["popular"]:
-                self.discovery_plugins["popular"] = self.discovery.discover_popular_plugins()
-            plugins = self.discovery_plugins["popular"]
-        elif mode == "trending":
-            if not self.discovery_plugins["trending"]:
-                self.discovery_plugins["trending"] = self.discovery.discover_trending_plugins()
-            plugins = self.discovery_plugins["trending"]
-        elif mode == "scripts":
-            if not self.discovery_plugins.get("scripts"):
-                self.discovery_plugins["scripts"] = self.discovery.discover_obs_scripts()
-            plugins = self.discovery_plugins.get("scripts", [])
-        else:
-            plugins = []
+        plugins = []
+        if source == "combined" and mode == "popular":
+            if not self.discovery_plugins["combined_popular"]:
+                self.discovery_plugins["combined_popular"] = self.discovery.discover_combined_popular()
+            plugins = self.discovery_plugins["combined_popular"]
+        elif source == "obs_site":
+            if mode == "scripts":
+                if not self.discovery_plugins["obs_site_scripts"]:
+                    self.discovery_plugins["obs_site_scripts"] = self.discovery.discover_obs_website_scripts()
+                plugins = self.discovery_plugins["obs_site_scripts"]
+            else:
+                if not self.discovery_plugins["obs_site_plugins"]:
+                    self.discovery_plugins["obs_site_plugins"] = self.discovery.discover_obs_website_plugins()
+                plugins = self.discovery_plugins["obs_site_plugins"]
+        elif source == "github":
+            if mode == "new":
+                if not self.discovery_plugins["github_new"]:
+                    self.discovery_plugins["github_new"] = self.discovery.discover_new_plugins()
+                plugins = self.discovery_plugins["github_new"]
+            elif mode == "popular":
+                if not self.discovery_plugins["github_popular"]:
+                    self.discovery_plugins["github_popular"] = self.discovery.discover_popular_plugins()
+                plugins = self.discovery_plugins["github_popular"]
+            elif mode == "trending":
+                if not self.discovery_plugins["github_trending"]:
+                    self.discovery_plugins["github_trending"] = self.discovery.discover_trending_plugins()
+                plugins = self.discovery_plugins["github_trending"]
+            elif mode == "scripts":
+                if not self.discovery_plugins["github_scripts"]:
+                    self.discovery_plugins["github_scripts"] = self.discovery.discover_obs_scripts()
+                plugins = self.discovery_plugins["github_scripts"]
         
         # Add to tree
         for plugin in plugins:
             # Format updated date
-            updated_str = plugin.get("updated_at", "")
+            updated_str = plugin.get("updated_at", plugin.get("last_update", ""))
             if updated_str:
                 try:
                     updated_dt = datetime.strptime(updated_str, "%Y-%m-%dT%H:%M:%SZ")
                     updated_display = updated_dt.strftime("%Y-%m-%d")
                 except Exception:
-                    updated_display = "Unknown"
+                    updated_display = updated_str[:10] if len(updated_str) >= 10 else "Unknown"
             else:
                 updated_display = "Unknown"
             
-            display_name = plugin.get("display_name", plugin["name"])
-            if plugin.get("is_script"):
+            display_name = plugin.get("display_name", plugin.get("name", "Unknown"))
+            if plugin.get("is_script") or plugin.get("resource_type") == "script":
                 display_name = "📜 " + display_name
+            
+            # Add source indicator
+            plugin_source = plugin.get("source", "")
+            if plugin_source:
+                display_name = f"[{plugin_source}] {display_name}"
+            
+            # Get stars or rating
+            stars_display = plugin.get("stars", 0)
+            if not stars_display and "rating" in plugin:
+                rating = plugin.get("rating", 0)
+                downloads = plugin.get("downloads", 0)
+                stars_display = f"{rating:.1f}⭐ ({downloads}dl)"
             
             self.discovery_tree.insert(
                 "",
@@ -1052,7 +1121,7 @@ class OBSPluginManagerGUI:
                 text=display_name,
                 values=(
                     plugin.get("author", "Unknown"),
-                    plugin.get("stars", 0),
+                    stars_display,
                     plugin.get("category", "Other"),
                     updated_display
                 )
@@ -1060,10 +1129,9 @@ class OBSPluginManagerGUI:
         
         # Update status
         cache_info = self.discovery.get_cache_info()
-        cache_key = f"{mode}_plugins" if mode != "scripts" else "obs_scripts"
         if cache_key in cache_info:
             age_hours = cache_info[cache_key].get("age_hours", 0)
-            self.discovery_status.config(text=f"Cached {age_hours:.1f}h ago")
+            self.discovery_status.config(text=f"Cached {age_hours:.1f}h ago ({source})")
     
     def _on_discovery_select(self, event):
         """Handle selection in discovery list."""
@@ -1073,19 +1141,32 @@ class OBSPluginManagerGUI:
         
         item = self.discovery_tree.item(selection[0])
         plugin_name = item['text'].replace("📜 ", "")
+        # Remove source prefix if present
+        plugin_name = re.sub(r'^\[.*?\]\s*', '', plugin_name)
         
-        # Find plugin in current mode's list
+        # Get current source and mode
+        source = self.discovery_source.get()
         mode = self.discovery_mode.get()
-        if mode == "new":
-            plugins = self.discovery_plugins["new"]
-        elif mode == "popular":
-            plugins = self.discovery_plugins["popular"]
-        elif mode == "trending":
-            plugins = self.discovery_plugins["trending"]
-        elif mode == "scripts":
-            plugins = self.discovery_plugins.get("scripts", [])
-        else:
-            plugins = []
+        cache_key = f"{source}_{mode}"
+        
+        # Find plugin in current list
+        plugins = []
+        if source == "combined":
+            plugins = self.discovery_plugins["combined_popular"]
+        elif source == "obs_site":
+            if mode == "scripts":
+                plugins = self.discovery_plugins.get("obs_site_scripts", [])
+            else:
+                plugins = self.discovery_plugins.get("obs_site_plugins", [])
+        elif source == "github":
+            if mode == "new":
+                plugins = self.discovery_plugins.get("github_new", [])
+            elif mode == "popular":
+                plugins = self.discovery_plugins.get("github_popular", [])
+            elif mode == "trending":
+                plugins = self.discovery_plugins.get("github_trending", [])
+            elif mode == "scripts":
+                plugins = self.discovery_plugins.get("github_scripts", [])
         
         plugin = None
         for p in plugins:
@@ -1094,23 +1175,52 @@ class OBSPluginManagerGUI:
                 break
         
         if plugin:
-            details = f"{plugin.get('display_name', plugin['name'])}\n"
+            details = f"{plugin.get('display_name', plugin.get('name', 'Unknown'))}\n"
             details += f"{'=' * 60}\n\n"
-            details += f"Repository: {plugin.get('full_name', 'Unknown')}\n"
+            
+            # Source indicator
+            plugin_source = plugin.get("source", "Unknown")
+            details += f"Source: {plugin_source}\n"
+            
+            if plugin.get('full_name'):
+                details += f"Repository: {plugin.get('full_name')}\n"
+            
             details += f"Author: {plugin.get('author', 'Unknown')}\n"
             details += f"Category: {plugin.get('category', 'Other')}\n"
-            details += f"Stars: ⭐ {plugin.get('stars', 0)}\n"
-            details += f"Forks: {plugin.get('forks', 0)}\n"
-            details += f"Language: {plugin.get('language', 'Unknown')}\n"
-            if plugin.get("is_script"):
+            
+            # Show stars or rating depending on source
+            if plugin.get("stars"):
+                details += f"Stars: ⭐ {plugin.get('stars', 0)}\n"
+            if plugin.get("rating"):
+                details += f"Rating: {plugin.get('rating', 0):.1f}/5.0\n"
+            if plugin.get("downloads"):
+                details += f"Downloads: {plugin.get('downloads', 0):,}\n"
+            
+            if plugin.get("forks"):
+                details += f"Forks: {plugin.get('forks', 0)}\n"
+            if plugin.get("language"):
+                details += f"Language: {plugin.get('language')}\n"
+            if plugin.get("version"):
+                details += f"Version: {plugin.get('version')}\n"
+            
+            # Type
+            if plugin.get("is_script") or plugin.get("resource_type") == "script":
                 details += f"Type: OBS Script\n"
             else:
                 details += f"Type: OBS Plugin\n"
-            details += f"\nLast Updated: {plugin.get('updated_at', 'Unknown')}\n"
+            
+            # Last update
+            last_update = plugin.get('updated_at', plugin.get('last_update', 'Unknown'))
+            details += f"\nLast Updated: {last_update}\n"
+            
+            # Description
             details += f"\nDescription:\n{plugin.get('description', 'No description')}\n\n"
+            
+            # Links
             details += f"Homepage: {plugin.get('homepage_url', 'N/A')}\n"
             details += f"Download: {plugin.get('download_url', 'N/A')}\n"
             
+            # Additional info
             if plugin.get("trending_score"):
                 details += f"\nTrending Score: {plugin['trending_score']:.2f}\n"
             
@@ -1126,19 +1236,30 @@ class OBSPluginManagerGUI:
         
         item = self.discovery_tree.item(selection[0])
         plugin_name = item['text'].replace("📜 ", "")
+        plugin_name = re.sub(r'^\[.*?\]\s*', '', plugin_name)
         
-        # Find plugin
+        # Get current source and mode
+        source = self.discovery_source.get()
         mode = self.discovery_mode.get()
-        if mode == "new":
-            plugins = self.discovery_plugins["new"]
-        elif mode == "popular":
-            plugins = self.discovery_plugins["popular"]
-        elif mode == "trending":
-            plugins = self.discovery_plugins["trending"]
-        elif mode == "scripts":
-            plugins = self.discovery_plugins.get("scripts", [])
-        else:
-            return
+        
+        # Find plugin in current list
+        plugins = []
+        if source == "combined":
+            plugins = self.discovery_plugins["combined_popular"]
+        elif source == "obs_site":
+            if mode == "scripts":
+                plugins = self.discovery_plugins.get("obs_site_scripts", [])
+            else:
+                plugins = self.discovery_plugins.get("obs_site_plugins", [])
+        elif source == "github":
+            if mode == "new":
+                plugins = self.discovery_plugins.get("github_new", [])
+            elif mode == "popular":
+                plugins = self.discovery_plugins.get("github_popular", [])
+            elif mode == "trending":
+                plugins = self.discovery_plugins.get("github_trending", [])
+            elif mode == "scripts":
+                plugins = self.discovery_plugins.get("github_scripts", [])
         
         plugin = None
         for p in plugins:
@@ -1159,23 +1280,34 @@ class OBSPluginManagerGUI:
         
         item = self.discovery_tree.item(selection[0])
         plugin_name = item['text'].replace("📜 ", "")
+        plugin_name = re.sub(r'^\[.*?\]\s*', '', plugin_name)
         
-        # Find plugin
+        # Get current source and mode
+        source = self.discovery_source.get()
         mode = self.discovery_mode.get()
-        if mode == "new":
-            plugins = self.discovery_plugins["new"]
-        elif mode == "popular":
-            plugins = self.discovery_plugins["popular"]
-        elif mode == "trending":
-            plugins = self.discovery_plugins["trending"]
-        elif mode == "scripts":
-            plugins = self.discovery_plugins.get("scripts", [])
-        else:
-            return
+        
+        # Find plugin in current list
+        plugins = []
+        if source == "combined":
+            plugins = self.discovery_plugins["combined_popular"]
+        elif source == "obs_site":
+            if mode == "scripts":
+                plugins = self.discovery_plugins.get("obs_site_scripts", [])
+            else:
+                plugins = self.discovery_plugins.get("obs_site_plugins", [])
+        elif source == "github":
+            if mode == "new":
+                plugins = self.discovery_plugins.get("github_new", [])
+            elif mode == "popular":
+                plugins = self.discovery_plugins.get("github_popular", [])
+            elif mode == "trending":
+                plugins = self.discovery_plugins.get("github_trending", [])
+            elif mode == "scripts":
+                plugins = self.discovery_plugins.get("github_scripts", [])
         
         plugin = None
         for p in plugins:
-            if p.get("display_name", p["name"]) == plugin_name:
+            if p.get("display_name", p.get("name")) == plugin_name:
                 plugin = p
                 break
         
