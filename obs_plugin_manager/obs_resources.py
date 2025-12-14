@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import List, Dict, Optional
 from pathlib import Path
 import json
+from .logger import get_logger
 
 
 class OBSResourcesFetcher:
@@ -33,9 +34,11 @@ class OBSResourcesFetcher:
         Args:
             cache_dir: Directory for caching OBS website data
         """
+        self.logger = get_logger(__name__)
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True)
         self.cache_file = self.cache_dir / "obs_resources_cache.json"
+        self.logger.info(f"OBS Resources fetcher initialized with cache dir: {cache_dir}")
         self._load_cache()
     
     def _load_cache(self):
@@ -44,19 +47,29 @@ class OBSResourcesFetcher:
             try:
                 with open(self.cache_file, 'r', encoding='utf-8') as f:
                     self.cache = json.load(f)
+                self.logger.debug(f"Loaded OBS resources cache with {len(self.cache)} entries")
+            except json.JSONDecodeError as e:
+                self.logger.error(f"OBS resources cache corrupted: {e}. Starting fresh.")
+                self.cache = {}
             except Exception as e:
-                print(f"Error loading OBS resources cache: {e}")
+                self.logger.exception(f"Unexpected error loading OBS resources cache: {e}")
                 self.cache = {}
         else:
+            self.logger.debug("No OBS resources cache found, will fetch from website")
             self.cache = {}
     
     def _save_cache(self):
         """Save OBS resources to cache."""
         try:
-            with open(self.cache_file, 'w', encoding='utf-8') as f:
+            # Write to temp file first (atomic operation)
+            temp_file = self.cache_file.with_suffix('.tmp')
+            with open(temp_file, 'w', encoding='utf-8') as f:
                 json.dump(self.cache, f, indent=2, ensure_ascii=False)
+            # Atomic rename
+            temp_file.replace(self.cache_file)
+            self.logger.debug(f"Saved OBS resources cache with {len(self.cache)} entries")
         except Exception as e:
-            print(f"Error saving OBS resources cache: {e}")
+            self.logger.error(f"Error saving OBS resources cache: {e}")
     
     def fetch_obs_plugins(self, max_results: int = 50, force_refresh: bool = False) -> List[Dict]:
         """

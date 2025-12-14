@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 import hashlib
+from .logger import get_logger
+from .validators import sanitize_plugin_name, sanitize_version_string
 
 
 class LocalRepository:
@@ -21,6 +23,7 @@ class LocalRepository:
         Args:
             repo_dir: Directory for local plugin storage
         """
+        self.logger = get_logger(__name__)
         self.repo_dir = Path(repo_dir)
         self.repo_dir.mkdir(exist_ok=True)
         
@@ -33,6 +36,7 @@ class LocalRepository:
             directory.mkdir(exist_ok=True)
         
         self.index_file = self.repo_dir / "repository_index.json"
+        self.logger.info(f"Local repository initialized at: {repo_dir}")
         self._load_index()
     
     def _load_index(self):
@@ -41,19 +45,34 @@ class LocalRepository:
             try:
                 with open(self.index_file, 'r') as f:
                     self.index = json.load(f)
+                plugin_count = len(self.index.get("plugins", {}))
+                script_count = len(self.index.get("scripts", {}))
+                self.logger.debug(f"Loaded index: {plugin_count} plugins, {script_count} scripts")
+            except json.JSONDecodeError as e:
+                self.logger.error(f"Repository index corrupted: {e}. Creating backup and resetting.")
+                # Backup corrupted file
+                backup_file = self.index_file.with_suffix('.json.corrupted')
+                shutil.copy2(self.index_file, backup_file)
+                self.index = {"plugins": {}, "scripts": {}}
             except Exception as e:
-                print(f"Error loading index: {e}")
+                self.logger.exception(f"Unexpected error loading index: {e}")
                 self.index = {"plugins": {}, "scripts": {}}
         else:
+            self.logger.debug("No index file found, creating new repository index")
             self.index = {"plugins": {}, "scripts": {}}
     
     def _save_index(self):
         """Save repository index."""
         try:
-            with open(self.index_file, 'w') as f:
+            # Write to temp file first (atomic operation)
+            temp_file = self.index_file.with_suffix('.tmp')
+            with open(temp_file, 'w') as f:
                 json.dump(self.index, f, indent=2)
+            # Atomic rename
+            temp_file.replace(self.index_file)
+            self.logger.debug("Repository index saved successfully")
         except Exception as e:
-            print(f"Error saving index: {e}")
+            self.logger.error(f"Error saving index: {e}")
     
     def add_plugin_file(self, plugin_name: str, version: str, file_path: Path,
                        metadata: Dict = None) -> Tuple[bool, str]:
@@ -70,27 +89,37 @@ class LocalRepository:
             Tuple of (success, message)
         """
         try:
+            # Sanitize inputs for security
+            safe_name = sanitize_plugin_name(plugin_name)
+            safe_version = sanitize_version_string(version)
+            
+            if safe_name != plugin_name:
+                self.logger.warning(f"Plugin name sanitized: '{plugin_name}' -> '{safe_name}'")
+            if safe_version != version:
+                self.logger.warning(f"Version sanitized: '{version}' -> '{safe_version}'")
+            
             # Create plugin directory
-            plugin_dir = self.plugins_dir / plugin_name
+            plugin_dir = self.plugins_dir / safe_name
             plugin_dir.mkdir(exist_ok=True)
             
             # Create version directory
-            version_dir = plugin_dir / version
+            version_dir = plugin_dir / safe_version
             version_dir.mkdir(exist_ok=True)
             
             # Copy file to repository
             dest_file = version_dir / file_path.name
             shutil.copy2(file_path, dest_file)
+            self.logger.info(f"Added plugin file: {safe_name} v{safe_version} ({file_path.name})")
             
             # Calculate hash
             file_hash = self._calculate_hash(dest_file)
             
             # Update index
-            if plugin_name not in self.index["plugins"]:
-                self.index["plugins"][plugin_name] = {"versions": []}
+            if safe_name not in self.index["plugins"]:
+                self.index["plugins"][safe_name] = {"versions": []}
             
             version_entry = {
-                "version": version,
+                "version": safe_version,
                 "filename": file_path.name,
                 "path": str(dest_file),
                 "size": dest_file.stat().st_size,
@@ -100,21 +129,23 @@ class LocalRepository:
             }
             
             # Check if version already exists
-            existing_versions = [v["version"] for v in self.index["plugins"][plugin_name]["versions"]]
-            if version not in existing_versions:
-                self.index["plugins"][plugin_name]["versions"].append(version_entry)
+            existing_versions = [v["version"] for v in self.index["plugins"][safe_name]["versions"]]
+            if safe_version not in existing_versions:
+                self.index["plugins"][safe_name]["versions"].append(version_entry)
+                self.logger.debug(f"Added new version: {safe_name} v{safe_version}")
                 
                 # Keep only last 2 versions
-                self._cleanup_old_versions(plugin_name, "plugins")
+                self._cleanup_old_versions(safe_name, "plugins")
             else:
                 # Update existing version
-                for i, v in enumerate(self.index["plugins"][plugin_name]["versions"]):
-                    if v["version"] == version:
-                        self.index["plugins"][plugin_name]["versions"][i] = version_entry
+                for i, v in enumerate(self.index["plugins"][safe_name]["versions"]):
+                    if v["version"] == safe_version:
+                        self.index["plugins"][safe_name]["versions"][i] = version_entry
+                        self.logger.debug(f"Updated existing version: {safe_name} v{safe_version}")
                         break
             
             self._save_index()
-            return True, f"Added {plugin_name} v{version} to local repository"
+            return True, f"Added {safe_name} v{safe_version} to local repository"
         except Exception as e:
             return False, f"Failed to add to repository: {str(e)}"
     

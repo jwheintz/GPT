@@ -10,6 +10,7 @@ from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 import re
 from .obs_resources import OBSResourcesFetcher
+from .logger import get_logger
 
 
 class PluginDiscovery:
@@ -49,6 +50,7 @@ class PluginDiscovery:
         Args:
             cache_dir: Directory for caching discovery results
         """
+        self.logger = get_logger(__name__)
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True)
         
@@ -58,6 +60,7 @@ class PluginDiscovery:
         # Initialize OBS Resources fetcher
         self.obs_resources = OBSResourcesFetcher()
         
+        self.logger.info(f"Discovery module initialized with cache dir: {cache_dir}")
         self._load_cache()
     
     def _load_cache(self):
@@ -66,18 +69,31 @@ class PluginDiscovery:
             try:
                 with open(self.cache_file, 'r') as f:
                     self.cache = json.load(f)
-            except Exception:
+                self.logger.debug(f"Loaded cache from {self.cache_file} with {len(self.cache)} entries")
+            except json.JSONDecodeError as e:
+                self.logger.error(f"Cache file corrupted: {e}. Starting with empty cache.")
+                self.cache = {}
+            except Exception as e:
+                self.logger.exception(f"Unexpected error loading cache: {e}")
                 self.cache = {}
         else:
+            self.logger.debug("No cache file found, starting with empty cache")
             self.cache = {}
     
     def _save_cache(self):
         """Save discovery results to cache."""
         try:
-            with open(self.cache_file, 'w') as f:
+            # Ensure directory exists
+            self.cache_file.parent.mkdir(parents=True, exist_ok=True)
+            # Write to temp file first (atomic operation)
+            temp_file = self.cache_file.with_suffix('.tmp')
+            with open(temp_file, 'w') as f:
                 json.dump(self.cache, f, indent=2)
+            # Atomic rename
+            temp_file.replace(self.cache_file)
+            self.logger.debug(f"Saved cache to {self.cache_file} with {len(self.cache)} entries")
         except Exception as e:
-            print(f"Error saving cache: {e}")
+            self.logger.error(f"Error saving cache: {e}")
     
     def _is_cache_valid(self, cache_key: str) -> bool:
         """Check if cached data is still valid."""
@@ -90,8 +106,13 @@ class PluginDiscovery:
         
         try:
             cached_dt = datetime.fromisoformat(cached_time)
-            return datetime.now() - cached_dt < self.cache_expiry
-        except Exception:
+            age = datetime.now() - cached_dt
+            is_valid = age < self.cache_expiry
+            if not is_valid:
+                self.logger.debug(f"Cache key '{cache_key}' expired (age: {age})")
+            return is_valid
+        except Exception as e:
+            self.logger.warning(f"Error checking cache validity for '{cache_key}': {e}")
             return False
     
     def _github_request(self, url: str, params: Dict = None) -> Optional[Dict]:
