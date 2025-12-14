@@ -47,9 +47,11 @@ class OBSManager:
                             self.obs_path = obs_path
                             self._detect_plugin_directories()
                             return True
-                    except WindowsError:
+                    except OSError:
+                        # OSError covers Windows registry errors (was WindowsError in Python 2)
                         pass
-            except WindowsError:
+            except OSError:
+                # OSError covers Windows registry errors (was WindowsError in Python 2)
                 continue
         
         # Try common directories
@@ -202,7 +204,8 @@ class OBSManager:
                          f'(Get-Item "{exe_path}").VersionInfo.FileVersion'],
                         capture_output=True,
                         text=True,
-                        timeout=5
+                        timeout=5,
+                        check=False  # We handle errors via returncode
                     )
                     if result.returncode == 0 and result.stdout.strip():
                         return result.stdout.strip()
