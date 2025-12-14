@@ -1,0 +1,25 @@
+{
+    "last_updated": "2025-12-14T16:18:34.768612",
+    "plugins": {
+        "obs-websocket": {
+            "version": "5.0.1",
+            "download_url": "https://github.com/obsproject/obs-websocket/releases/download/5.0.1/obs-websocket-5.0.1-Windows.zip",
+            "description": "Remote control OBS Studio from WebSockets",
+            "files": [
+                "obs-plugins/64bit/obs-websocket.dll",
+                "data/obs-plugins/obs-websocket/"
+            ],
+            "last_checked": "2025-12-14T16:18:34.768483"
+        },
+        "move-transition": {
+            "version": "2.9.0",
+            "download_url": "https://obsproject.com/forum/resources/move-transition.913/",
+            "description": "Move sources to a new position during a transition",
+            "files": [
+                "obs-plugins/64bit/move-transition.dll",
+                "data/obs-plugins/move-transition/"
+            ],
+            "last_checked": "2025-12-14T16:18:34.768609"
+        }
+    }
+}
